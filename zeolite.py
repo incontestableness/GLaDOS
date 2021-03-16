@@ -120,12 +120,27 @@ for i in region_server_lists:
 			tf_servers.append(ip_port)
 	region_tf_lists.append({"region": nicename, "shortname": shortname, "ip_port_list": tf_servers})
 
-	# Save the lists for each region to their own file
-	tf_servers.sort()
+	# Load old list if any
 	filename = shortname + ".tf_list"
+	old = []
+	try:
+		file = open(filename, "r")
+		data = file.read()
+		file.close()
+		old = data.split("\n")[:-1]
+	except FileNotFoundError:
+		pass
+
+	# Add to existing list if possible
+	for server in tf_servers:
+		if server not in old:
+			old.append(server)
+
+	# Save the lists for each region to their own file
+	old.sort()
 	file = open(filename, "a")
 	file.truncate(0)
-	for server in tf_servers:
+	for server in old:
 		file.write(f"{server}\n")
 	file.close()
 
