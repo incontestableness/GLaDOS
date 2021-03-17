@@ -43,6 +43,18 @@ def getPossibleServers():
 		shortname = region[0]
 		if shortname in empty_regions:
 			continue
+
+		# Load old list if any
+		filename = shortname + ".tf_list"
+		old = []
+		try:
+			file = open(filename, "r")
+			data = file.read()
+			file.close()
+			old = data.split("\n")[:-1]
+		except FileNotFoundError:
+			pass
+
 		data = region[1]
 		longname = shortname
 		if "desc" in data:
@@ -62,7 +74,9 @@ def getPossibleServers():
 							# Get a list of IPs in this range
 							for k in netaddr.IPNetwork(j):
 								for l in default_ports:
-									ip_port_list.add(f"{str(k)}:{l}")
+									item = f"{str(k)}:{l}"
+									if item not in old:
+										ip_port_list.add(item)
 						# If there is a hyphen and colon, this is an IP with a port range
 						elif "-" in j and ":" in j:
 							ip, port_range = j.split(":")
@@ -70,7 +84,9 @@ def getPossibleServers():
 							start_port = int(port_range[0])
 							end_port = int(port_range[1])
 							for port in list(range(start_port, end_port + 1)):
-								ip_port_list.add(f"{ip}:{port}")
+								item = f"{ip}:{port}"
+								if item not in old:
+									ip_port_list.add(item)
 						# There wasn't both a hyphen and colon; this is just an IP range string like X.X.X.X-Y.Y.Y.Y
 						else:
 							start_ip, end_ip = j.split("-")
@@ -83,7 +99,9 @@ def getPossibleServers():
 						# We've been given a dict
 						ip, port_range = j["ipv4"], j["port_range"]
 						for port in list(range(port_range[0], port_range[1] + 1)):
-							ip_port_list.add(f"{ip}:{port}")
+							item = f"{ip}:{port}"
+							if item not in old:
+								ip_port_list.add(item)
 		print(f"Region {nicename} contains {len(ip_port_list)} possible servers.\n")
 		region_server_lists.append({"region": nicename, "shortname": shortname, "ip_port_list": ip_port_list})
 	return region_server_lists
