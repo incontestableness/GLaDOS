@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
 # Purpose: Scan all of Valve's servers. Store per-region lists of those that run TF2 source dedicated servers.
+# Expect ~40 minutes for non-empty regions with default options, or about 6 to 9 hours with the --patient flag.
 
+import argparse
 import a2s
 import concurrent.futures
 import json
@@ -14,6 +16,14 @@ import time
 
 
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--single-region", type=str) # For "stubborn" regions like lax that need to be scanned repeatedly even with a long timeout
+parser.add_argument("--scan-empty-only", action="store_true") # If you really want to scan regions with no TF2 servers, you can, I guess
+parser.add_argument("--patient", action="store_true") # Wait 5 seconds instead of 0.5 seconds. takes ~10 times longer to scan!
+parser.add_argument("--workers", type=int, default=768) # Essentially how many connections to have open at the same time. I hope you know what you're doing!
+args = parser.parse_args()
+
+
 default_ports = list(range(27015, 27068 + 1))
 empty_regions = "ams atl canm can cant canu dfw eze fra lhr ord par pwg pwj pwu pww pwz sea sham sha shat shau shb sof sto2 tsnm tsn tsnt tsnu tyo1 vie waw"
 
@@ -24,7 +34,7 @@ def scanIP(ip_port_str):
 	port = int(port)
 	is_tf2_srcds = False
 	try:
-		response = a2s.info((ip, port), timeout=0.500)
+		response = a2s.info((ip, port), timeout=(0.500 if not args.patient else 5.000))
 		is_tf2_srcds = response.folder == "tf"
 	except (a2s.BrokenMessageError, socket.timeout):
 		pass
@@ -41,7 +51,16 @@ def getPossibleServers():
 	region_server_lists = []
 	for region in regions:
 		shortname = region[0]
-		if shortname in empty_regions:
+
+		# This logic is particularly dumb but I can't remember how to do it better right now
+		if args.scan_empty_only:
+			if shortname not in empty_regions:
+				continue
+		else:
+			if shortname in empty_regions:
+				continue
+
+		if args.single_region and shortname != args.single_region:
 			continue
 
 		# Load old list if any
@@ -119,7 +138,7 @@ for i in region_server_lists:
 	num_servers = len(ip_port_list)
 	print(f"[{time.time()}] Scanning for {num_servers} possible servers in {nicename}...")
 	tf_servers = []
-	executor = concurrent.futures.ThreadPoolExecutor(max_workers=768)
+	executor = concurrent.futures.ThreadPoolExecutor(max_workers=args.workers)
 	future_objs = []
 	for index, j in enumerate(ip_port_list):
 		# Print progress
