@@ -26,6 +26,7 @@ args = parser.parse_args()
 
 default_ports = list(range(27015, 27068 + 1))
 empty_regions = "ams atl canm can cant canu dfw eze fra lhr ord par pwg pwj pwu pww pwz sea sham sha shat shau shb sof sto2 tsnm tsn tsnt tsnu tyo1 vie waw"
+empty_regions = empty_regions.split(" ")
 
 
 # Scans a given IP:PORT string, then returns it and whether it's a TF2 SRCDS
