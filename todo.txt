@@ -1,0 +1,2 @@
+potato.py:
+	Someone should check whether there are actually TF2 servers in all three sections of the NDC. Currently we just blindly scan everything.
