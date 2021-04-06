@@ -10,6 +10,7 @@ import concurrent.futures
 from itertools import islice
 import json
 import netaddr
+import os
 import pprint
 import requests
 import sys
@@ -94,7 +95,11 @@ def query_ip_list(ip_list):
 	session.headers.update({"user-agent": "potato.py/1.0 (https://github.com/incontestableness/GLaDOS)"})
 	for ip in ip_list:
 		response = session.get(f"https://api.steampowered.com/ISteamApps/GetServersAtAddress/v0001?addr={ip}")
-		json_obj = json.loads(response.content)
+		try:
+			json_obj = json.loads(response.content)
+		except json.decoder.JSONDecodeError:
+			print(response.content)
+			os.abort()
 		if json_obj["response"]["success"] != True:
 			raise RuntimeError(f"API call was not successful for IP {ip}!")
 		servers = json_obj["response"]["servers"]
