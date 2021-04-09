@@ -2,7 +2,6 @@
 
 # Purpose: Query a Steam API for each of Valve's servers to determine what ports TF2 servers are running on, then store per-region lists of them.
 # This is a much more lightweight and efficient method of host discovery compared to zeolite.py.
-# Expect about 9 minutes to scan non-empty regions.
 
 import argparse
 import a2s
@@ -19,8 +18,16 @@ import time
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--scan-empty-only", action="store_true") # If you really want to scan regions with no tf2 servers, you can, I guess
-parser.add_argument("--workers", type=int, default=64) # Essentially how many API calls to be making at the same time. There may be one extra worker. I hope you know what you're doing!
+
+# If you really want to scan regions with no tf2 servers, you can, I guess
+parser.add_argument("--scan-empty-only", action="store_true")
+
+# Essentially how many API calls to be making at the same time. There may be one extra worker. I hope you know what you're doing!
+# 64 workers takes 9-10 minutes to scan non-empty regions.
+# 128 workers takes about 4-5 minutes.
+# If you set workers to 256 you can get ratelimited in about two minutes ^:)
+parser.add_argument("--workers", type=int, default=128)
+
 args = parser.parse_args()
 
 
