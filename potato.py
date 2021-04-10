@@ -19,6 +19,10 @@ import time
 
 parser = argparse.ArgumentParser()
 
+# Scans a single region only
+# Useful for testing or making sure we really have all the data for a region
+parser.add_argument("--single-region", type=str)
+
 # If you really want to scan regions with no tf2 servers, you can, I guess
 parser.add_argument("--scan-empty-only", action="store_true")
 
@@ -53,6 +57,9 @@ def getPossibleServers():
 		else:
 			if shortname in empty_regions:
 				continue
+
+		if args.single_region and shortname != args.single_region:
+			continue
 
 		data = region[1]
 		longname = shortname
