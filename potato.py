@@ -138,7 +138,7 @@ for i in region_server_lists:
 	# Then we're going to asynchronously spawn query_IP_list() instances which will (ideally) use a single connection per worker for many IP queries.
 	# We use significantly fewer connections and DNS lookups while still getting good throughput via multiple workers in the thread pool this way.
 	it = iter(ip_list)
-	chunk_size = int(len(ip_list) / args.workers)
+	chunk_size = int(len(ip_list) / args.workers) if len(ip_list) >= args.workers else len(ip_list)
 	chunked = list(iter(lambda: tuple(islice(it, chunk_size)), ()))
 
 	print(f"[{time.time()}] Querying the Steam API for {num_ips} IP addresses in {nicename} using {len(chunked)} workers...")
