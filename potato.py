@@ -171,12 +171,13 @@ for i in region_server_lists:
 			old.append(server)
 
 	# Save the lists for each region to their own file
-	old.sort()
-	file = open(filename, "a")
-	file.truncate(0)
-	for server in old:
-		file.write(f"{server}\n")
-	file.close()
+	if len(old) > 0:
+		old.sort()
+		file = open(filename, "a")
+		file.truncate(0)
+		for server in old:
+			file.write(f"{server}\n")
+		file.close()
 
 # Additional processing can be done after-the-fact like so
 for region in region_tf_lists:
