@@ -1,0 +1,3 @@
+potato.py's --freshen flag may be used every once in a while to remove servers that no longer run. To freshen lists, run potato.py once with the --freshen flag and then once or twice afterwards to ensure completeness. Use "git status" to check if anything actually changed as a result of subsequent scans. Consider waiting a day or two between scans.
+
+See commit 0a80e62db5e0e11ea7f729cb328366ff4d5943f1 for an example of how the --freshen flag can affect the dataset if misused.
