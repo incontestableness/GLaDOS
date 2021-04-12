@@ -1,2 +1,2 @@
 potato.py:
-	Someone should check whether there are actually TF2 servers in all three sections of the NDC. Currently we just blindly scan everything.
+	Someone should check whether there are actually TF2 servers in all three sections of the NetworkDatagramConfig JSON. Currently we just blindly scan everything, because it's easy enough to do so.
