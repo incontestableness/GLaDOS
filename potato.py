@@ -32,6 +32,9 @@ parser.add_argument("--scan-empty-only", action="store_true")
 # If you set workers to 256 you can get ratelimited in about two minutes ^:)
 parser.add_argument("--workers", type=int, default=128)
 
+# Instead of appending discovered servers to the existing lists, this option will write only those that were found in this run to the list files.
+parser.add_argument("--freshen", action="store_true")
+
 args = parser.parse_args()
 
 
@@ -170,12 +173,15 @@ for i in region_server_lists:
 		if server not in old:
 			old.append(server)
 
+	# Intend your puns, mortal
+	source_list = old if not args.freshen else tf_servers
+
 	# Save the lists for each region to their own file
-	if len(old) > 0:
-		old.sort()
+	if len(source_list) > 0:
+		source_list.sort()
 		file = open(filename, "a")
 		file.truncate(0)
-		for server in old:
+		for server in source_list:
 			file.write(f"{server}\n")
 		file.close()
 
