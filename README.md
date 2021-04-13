@@ -33,7 +33,7 @@ Simply run a local instance of [portalgun](https://github.com/incontestableness/
 
 **It is strongly recommended that you use the default central server as GLaDOS takes up considerable network bandwidth when scanning TF2 servers to target bot maps.**
 
-If you decide to mess around anyways, see notes.txt for miscellaneous information. Check out todo.txt if you want to contribute.
+If you you want to contribute, check out todo.txt.
 
 
 ## Why did you do this?

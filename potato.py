@@ -32,9 +32,6 @@ parser.add_argument("--scan-empty-only", action="store_true")
 # If you set workers to 256 you can get ratelimited in about two minutes ^:)
 parser.add_argument("--workers", type=int, default=128)
 
-# Instead of appending discovered servers to the existing lists, this option will write only those that were found in this run to the list files.
-parser.add_argument("--freshen", action="store_true")
-
 args = parser.parse_args()
 
 
@@ -108,6 +105,7 @@ region_server_lists = getPossibleServers()
 # Ask the Steam API about what servers are running behind this IP
 def query_ip_list(ip_list):
 	tf_servers = []
+	to_remove = []
 	session = requests.Session()
 	session.headers.update({"user-agent": "potato.py/1.0 (https://github.com/incontestableness/GLaDOS)"})
 	for ip in ip_list:
@@ -120,10 +118,13 @@ def query_ip_list(ip_list):
 		if json_obj["response"]["success"] != True:
 			raise RuntimeError(f"API call was not successful for IP {ip}!")
 		servers = json_obj["response"]["servers"]
+		if len(servers) == 0:
+			for port in range(27015, 27080):
+				to_remove.append(f"{ip}:{port}")
 		for i in servers:
 			if i["appid"] == 440:
 				tf_servers.append(f"{ip}:{i['gameport']}")
-	return tf_servers
+	return tf_servers, to_remove
 
 
 # We're going to scan region-by-region and build up a list of TF2 dedicated servers
@@ -144,20 +145,8 @@ for i in region_server_lists:
 	chunk_size = int(len(ip_list) / args.workers) if len(ip_list) >= args.workers else len(ip_list)
 	chunked = list(iter(lambda: tuple(islice(it, chunk_size)), ()))
 
-	print(f"[{time.time()}] Querying the Steam API for {num_ips} IP addresses in {nicename} using {len(chunked)} workers...")
-	tf_servers = []
-	executor = concurrent.futures.ThreadPoolExecutor(max_workers=args.workers)
-	future_objs = []
-	for chunk in chunked:
-		future_obj = executor.submit(query_ip_list, chunk)
-		future_objs.append(future_obj)
-	for future_obj in concurrent.futures.as_completed(future_objs):
-		found_servers = future_obj.result()
-		for i in found_servers:
-			tf_servers.append(i)
-	region_tf_lists.append({"region": nicename, "shortname": shortname, "ip_list": tf_servers})
-
-	# Load old list if any
+	# Load old list first if any
+	# This way, when the API reports no TF2 servers for an IP, we can remove that server from the list if it was previously discovered
 	filename = shortname + ".tf_list"
 	old = []
 	try:
@@ -168,20 +157,39 @@ for i in region_server_lists:
 	except FileNotFoundError:
 		pass
 
+	print(f"[{time.time()}] Querying the Steam API for {num_ips} IP addresses in {nicename} using {len(chunked)} workers...")
+	tf_servers = []
+	count_removed = 0
+	executor = concurrent.futures.ThreadPoolExecutor(max_workers=args.workers)
+	future_objs = []
+	for chunk in chunked:
+		future_obj = executor.submit(query_ip_list, chunk)
+		future_objs.append(future_obj)
+	for future_obj in concurrent.futures.as_completed(future_objs):
+		found_servers, to_remove = future_obj.result()
+		for i in found_servers:
+			tf_servers.append(i)
+		# This is probably the simplest way to do this, sadly
+		for server in to_remove:
+			try:
+				old.remove(server)
+				count_removed += 1
+			except ValueError:
+				pass
+	print(f"Removed {count_removed} servers from {shortname}")
+	region_tf_lists.append({"region": nicename, "shortname": shortname, "ip_list": tf_servers})
+
 	# Add to existing list if possible
 	for server in tf_servers:
 		if server not in old:
 			old.append(server)
 
-	# Intend your puns, mortal
-	source_list = old if not args.freshen else tf_servers
-
 	# Save the lists for each region to their own file
-	if len(source_list) > 0:
-		source_list.sort()
+	if len(old) > 0:
+		old.sort()
 		file = open(filename, "a")
 		file.truncate(0)
-		for server in source_list:
+		for server in old:
 			file.write(f"{server}\n")
 		file.close()
 
