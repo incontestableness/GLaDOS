@@ -32,8 +32,23 @@ parser.add_argument("--scan-empty-only", action="store_true")
 # If you set workers to 256 you can get ratelimited in about two minutes ^:)
 parser.add_argument("--workers", type=int, default=128)
 
+# The endpoint potato.py uses does not require an API key.
+# This is only useful for testing provided a Valve-approved higher API call limit, or for the sake of more transparent API usage.
+# If you store your key in api-key.txt, that will be used instead.
+parser.add_argument("--api-key", type=str)
+
 args = parser.parse_args()
 
+
+key_param = ""
+try:
+	file = open("api-key.txt", "r")
+	data = file.read()
+	file.close()
+	key_param = f"&key={data.strip()}"
+except FileNotFoundError:
+	if hasattr(args, "api_key"):
+		key_param = f"&key={args.api_key}"
 
 empty_regions = "ams atl canm can cant canu dfw eze fra lhr ord par pwg pwj pwu pww pwz sea sham sha shat shau shb sof sto2 tsnm tsn tsnt tsnu tyo1 vie waw"
 empty_regions = empty_regions.split(" ")
@@ -109,7 +124,7 @@ def query_ip_list(ip_list):
 	session = requests.Session()
 	session.headers.update({"user-agent": "potato.py/1.0 (https://github.com/incontestableness/GLaDOS)"})
 	for ip in ip_list:
-		response = session.get(f"https://api.steampowered.com/ISteamApps/GetServersAtAddress/v0001?addr={ip}")
+		response = session.get(f"https://api.steampowered.com/ISteamApps/GetServersAtAddress/v0001?addr={ip}{key_param}")
 		try:
 			json_obj = json.loads(response.content)
 		except json.decoder.JSONDecodeError:
