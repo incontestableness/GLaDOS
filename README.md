@@ -15,14 +15,14 @@ GLaDOS relies on per-region lists of TF2 servers to scan in order to provide the
 
 ## What's zeolite.py?
 
-Zeolite was the first method I tried for TF2 server discovery. It scans all of Valve's server ranges for TF2 servers. It's unreliable for some regions and thus requires several attempts at scanning. Shortly after finishing it I came across the Steam API that potato.py uses. The code's just here for looks. Please don't use it.
+Zeolite was the first method Milenko tried for TF2 server discovery. It scans all of Valve's server ranges for TF2 servers. It's unreliable for some regions and thus requires several attempts at scanning. Shortly after finishing it he came across the Steam API that potato.py uses. The code's just here for looks.
+
+"yeah zeolite sucks don't use it" - The Great Milenko, 04/10/2021
 
 
 ## What's potato.py?
 
-After writing zeolite.py, I found that an API endpoint Steam makes available allows you to get a list of servers running on a given IP address. [This approach is a lot less complex and much more efficient.](https://i1.theportalwiki.net/img/5/58/GLaDOS_potatos_longfall_speech03.wav) It only takes about 10 minutes to scan regions known to host TF2 dedicated servers.
-
-However, the API sometimes does not return information on servers that ought to be running on a port, presumably because they were offline at the time. To solve this, potato.py adds to the lists with subsequent runs. This has the consequence that if an IP address no longer hosts servers, this will not be reflected in the lists until they are deleted and repopulated.
+After writing zeolite.py, Milenko found that an API endpoint Steam makes available allows you to get a list of servers running on a given IP address. [This approach is a lot less complex and much more efficient.](https://i1.theportalwiki.net/img/5/58/GLaDOS_potatos_longfall_speech03.wav) It only takes about 5 minutes to scan regions known to host TF2 dedicated servers.
 
 
 ## How do I use this?
