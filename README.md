@@ -36,6 +36,19 @@ Simply run a local instance of [portalgun](https://github.com/incontestableness/
 If you you want to contribute, check out todo.txt.
 
 
+## Is the GLaDOS API publicly available?
+
+Yes! You can access the API at http://milenko.ml/api/something where "/something" is the relevant API call.
+
+All responses are returned in JSON format, unless an error is encountered. Most calls are limited to 10 or 20 requests per minute.
+
+Here are the publicly available API calls:
+* [/popmaps/region](http://milenko.ml/api/popmaps/iad) - A list of the most popular maps for malicious bots. See regions.txt for available regions.
+* [/botnames](http://milenko.ml/api/botnames) - A list of potential bot names, based on multiple players using the same name.
+* [/check/server](http://milenko.ml/api/check/208.78.165.231:27015) - The number of bots on the server and a list of likely namestealers.
+* [/stats](http://milenko.ml/api/stats) - Cumulative statistics, updated every minute.
+
+
 ## Why did you do this?
 
 1. In order to enable hosting anti-bots in multiple regions while still gathering aggregated statistics easily

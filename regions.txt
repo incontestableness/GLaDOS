@@ -1,0 +1,16 @@
+Mumbai: bom
+Dubai: dxb
+Moses Lake: eat
+Sao Paulo: gru
+Hong Kong: hkg
+Sterling: iad
+Johannesburg: jnb
+Los Angeles: lax
+Lima: lim
+Chennai: maa
+Madrid: mad
+Santiago: scl
+Singapore: sgp
+Stockholm (Kista): sto
+Sydney: syd
+Tokyo (North): tyo

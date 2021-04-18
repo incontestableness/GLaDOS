@@ -1,2 +1,5 @@
 python-a2s
 netaddr
+flask
+flask_caching
+flask_limiter
