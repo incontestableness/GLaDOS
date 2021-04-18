@@ -1,0 +1,2 @@
+python-a2s
+netaddr
