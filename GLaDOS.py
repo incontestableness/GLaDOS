@@ -259,6 +259,7 @@ def reload():
 	if not whitelisted():
 		abort(403)
 	core.load_blacklist()
+	core.bot_names = set()
 	return jsonify({"response": {"success": True}})
 
 
