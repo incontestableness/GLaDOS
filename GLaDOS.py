@@ -50,6 +50,17 @@ class PName:
 	def __init__(self, name):
 		self.name = name
 		self.times_seen = 1
+		self.first_seen = time.time()
+		self.last_seen = self.first_seen
+
+	def increment(self):
+		now = time.time()
+		# If we're seeing this bot again but it's been over 24h, reset the counter
+		if now - self.first_seen >= 60 * 60 * 24:
+			self.times_seen = 0
+			self.first_seen = now
+		self.times_seen += 1
+		self.last_seen = now
 
 
 # Handles active server scanning
@@ -96,7 +107,7 @@ class MoralityCore:
 	def updatePName(self, bot_names, name):
 		for i in bot_names:
 			if i.name == name:
-				i.times_seen += 1
+				i.increment()
 				return bot_names
 		# PName doesn't exist yet, create it and append to the list
 		pn = PName(name)
@@ -307,6 +318,44 @@ def exampleEventHandler(data):
 def stats():
 	abort(503)
 	return jsonify({})
+
+
+# "You picked the wrong house, fool!"
+# Automatic TF2BD rules list creation based on current common bot names
+# Cached for five minutes
+@api.route("/namerules")
+@cache.cached(forced_update=whitelisted, timeout=60 * 5)
+@limiter.limit("10/minute")
+def namerules():
+	pnames = []
+	for pn in core.bot_names:
+		# Ignore names older than 24h
+		if time.time() - pn.last_seen >= 60 * 60 * 24:
+			continue
+		# High confidence
+		if pn.times_seen >= 100:
+			pnames.append(pn)
+	data = {"$schema": "https://raw.githubusercontent.com/PazerOP/tf2_bot_detector/master/schemas/v3/rules.schema.json"}
+	data["file_info"] = {
+		"authors": ["Sydney"],
+		"title": "Vibe check",
+		"description": "GLaDOS automatic bot name detection rules list",
+		"update_url": "http://milenko.ml/api/namerules"
+	}
+	rules = []
+	for pn in pnames:
+		rule = {"actions": {"transient_mark": ["cheater"]}}
+		rule["description"] = f"\"{pn.name}\" seen {pn.times_seen} times in 24h"
+		rule["triggers"] = {
+			"username_text_match": {
+				"case_sensitive": True,
+				"mode": "regex",
+				"patterns": [f"(\(\d+\))?{re.escape(pn.name)}"]
+			}
+		}
+		rules.append(rule)
+	data["rules"] = rules
+	return jsonify(data)
 
 
 # Run the GLaDOS API server in the main thread, if running directly for development/testing and not as a WSGI application
