@@ -54,7 +54,7 @@ Here are the publicly available API calls:
 1. In order to enable hosting anti-bots in multiple regions while still gathering aggregated statistics easily
 2. Much more efficient targeting of matches with malicious bots
 3. Provide for a better [hathook](https://github.com/incontestableness/hathook-public) user experience
-4. Create an API that enables displaying statistics on [the website](https://milenko-tf2.github.io/)
+4. Create an API that enables displaying statistics on [the website](http://milenko.ml/)
 5. Science is fun
 
 
