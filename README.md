@@ -45,6 +45,7 @@ All responses are returned in JSON format, unless an error is encountered. Most 
 Here are the publicly available API calls:
 * [/popmaps/region](http://milenko.ml/api/popmaps/iad) - A list of the most popular maps for malicious bots. See regions.txt for available regions.
 * [/botnames](http://milenko.ml/api/botnames) - A list of potential bot names, based on multiple players using the same name.
+* [/namerules](http://milenko.ml/api/namerules) - An auto-updating [TF2BD](https://github.com/PazerOP/tf2_bot_detector)-compatible rules list for current bot names.
 * [/check/server](http://milenko.ml/api/check/208.78.165.231:27015) - The number of bots on the server and a list of likely namestealers.
 * [/stats](http://milenko.ml/api/stats) - Cumulative statistics, updated every minute.
 
