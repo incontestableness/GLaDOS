@@ -356,7 +356,9 @@ def namerules():
 		}
 		rules.append(rule)
 	data["rules"] = rules
-	return jsonify(data)
+	response = jsonify(data)
+	response.headers["Content-Disposition"] = "inline; filename=rules.GLaDOS.json"
+	return response
 
 
 # Run the GLaDOS API server in the main thread, if running directly for development/testing and not as a WSGI application
