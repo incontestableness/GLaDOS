@@ -346,12 +346,13 @@ def namerules():
 	rules = []
 	for pn in pnames:
 		rule = {"actions": {"transient_mark": ["cheater"]}}
-		rule["description"] = f"\"{pn.name}\" seen {pn.times_seen} times in 24h"
+		json_quote_escaped = pn.name.replace("\"", "\\\"")
+		rule["description"] = f"\"{json_quote_escaped}\" seen {pn.times_seen} times in 24h"
 		rule["triggers"] = {
 			"username_text_match": {
 				"case_sensitive": True,
 				"mode": "regex",
-				"patterns": [f"\([1-9]\d?\)?{re.escape(pn.name)}"]
+				"patterns": [f"\([1-9]\d?\)?{re.escape(json_quote_escaped)}"]
 			}
 		}
 		rules.append(rule)
