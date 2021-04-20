@@ -349,7 +349,7 @@ def namerules():
 			snames.append(pn)
 	data = {"$schema": "https://raw.githubusercontent.com/PazerOP/tf2_bot_detector/master/schemas/v3/rules.schema.json"}
 	data["file_info"] = {
-		"authors": ["Sydney"],
+		"authors": ["Sydney", "The Great Milenko"],
 		"title": "Vibe check",
 		"description": "GLaDOS automatic bot name detection rules list",
 		"update_url": "http://milenko.ml/api/namerules"
