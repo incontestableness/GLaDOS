@@ -328,14 +328,17 @@ def stats():
 @cache.cached(forced_update=whitelisted, timeout=60 * 5)
 @limiter.limit("10/minute")
 def namerules():
-	pnames = []
+	bnames = []
+	snames = []
 	for pn in core.bot_names:
 		# Ignore names older than 24h
 		if time.time() - pn.last_seen >= 60 * 60 * 24:
 			continue
 		# High confidence
 		if pn.times_seen >= 100:
-			pnames.append(pn)
+			bnames.append(pn)
+		elif pn.times_seen >= 10:
+			snames.append(pn)
 	data = {"$schema": "https://raw.githubusercontent.com/PazerOP/tf2_bot_detector/master/schemas/v3/rules.schema.json"}
 	data["file_info"] = {
 		"authors": ["Sydney"],
@@ -344,8 +347,20 @@ def namerules():
 		"update_url": "http://milenko.ml/api/namerules"
 	}
 	rules = []
-	for pn in pnames:
+	for pn in bnames:
 		rule = {"actions": {"transient_mark": ["cheater"]}}
+		json_quote_escaped = pn.name.replace("\"", "\\\"")
+		rule["description"] = f"\"{json_quote_escaped}\" seen {pn.times_seen} times in 24h"
+		rule["triggers"] = {
+			"username_text_match": {
+				"case_sensitive": True,
+				"mode": "regex",
+				"patterns": [f"\([1-9]\d?\)?{re.escape(json_quote_escaped)}"]
+			}
+		}
+		rules.append(rule)
+	for pn in snames:
+		rule = {"actions": {"transient_mark": ["suspicious"]}}
 		json_quote_escaped = pn.name.replace("\"", "\\\"")
 		rule["description"] = f"\"{json_quote_escaped}\" seen {pn.times_seen} times in 24h"
 		rule["triggers"] = {
