@@ -14,4 +14,7 @@ sudo cp -vr WSGI/* /etc/apache2/
 sudo a2ensite GLaDOS.conf
 sudo systemctl reload apache2
 
+echo -e "\nSetting up static content..."
+sudo rmdir /var/www/html && sudo git clone https://github.com/incontestableness/milenko.ml /var/www/
+
 echo -e "\nAll done."
