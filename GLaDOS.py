@@ -3,7 +3,7 @@
 import a2s
 import argparse
 import concurrent.futures
-from flask import abort, Flask, jsonify, request
+from flask import abort, Flask, jsonify, redirect, request
 from flask_caching import Cache
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -250,6 +250,14 @@ with open("ip_whitelist.txt", "r") as wl:
 
 def whitelisted():
 	return request.remote_addr in whitelist
+
+
+# Redirect to static content about the API
+@api.route("/")
+@cache.cached(timeout=60 * 60)
+@limiter.limit("10/minute")
+def root():
+	return redirect(location="/api.html")
 
 
 # We can load an updated regex name blacklist on demand without restarting
