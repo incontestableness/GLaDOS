@@ -279,15 +279,23 @@ def popmaps(desired_region):
 
 # Return a list of bot names we have seen while scanning
 # The counter accumulates, which makes it useful for measuring "presence" over time
-# A bot will have a higher score at the end of the day
-# TODO: Should we reset the counter every N scans?
+# A bot will have a higher score at the end of the measurement period
 @api.route("/botnames")
 @cache.cached(forced_update=whitelisted)
 @limiter.limit("10/minute")
 def botnames():
 	bot_names = []
-	for i in core.bot_names:
-		bot_names.append({i.name: {"times_seen": i.times_seen}})
+	for pn in core.bot_names:
+		# Ignore names older than 24h
+		if time.time() - pn.last_seen >= 60 * 60 * 24:
+			continue
+		bot_names.append({
+			pn.name: {
+				"times_seen": pn.times_seen,
+				"first_seen": pn.first_seen,
+				"last_seen": pn.last_seen
+			}
+		})
 	return jsonify({"response": {"bot_names": bot_names}})
 
 
