@@ -15,6 +15,6 @@ sudo a2ensite GLaDOS.conf
 sudo systemctl reload apache2
 
 echo -e "\nSetting up static content..."
-sudo rmdir /var/www/html && sudo git clone https://github.com/incontestableness/milenko.ml /var/www/
+sudo rmdir /var/www/html && sudo git clone https://github.com/incontestableness/milenko.ml /var/www/ && sudo chown -vR $USER /var/www/.git
 
 echo -e "\nAll done."
