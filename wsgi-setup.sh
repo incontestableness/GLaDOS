@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-echo "The configurations in ./WSGI/ assume the domain name milenko.ml and the username nyrx."
+echo "The configuration in ./WSGI/ assumes the domain name milenko.ml, runtime username nyrx, and ServerAdmin email whyistherumg0ne@protonmail.com."
 read -p "Press enter to continue..."; echo
 
 sudo apt install python3-pip apache2 libapache2-mod-wsgi-py3 -y
