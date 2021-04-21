@@ -53,6 +53,9 @@ class PName:
 		self.first_seen = time.time()
 		self.last_seen = self.first_seen
 
+	def __lt__(self, other):
+		return self.times_seen < other.times_seen
+
 	def increment(self):
 		now = time.time()
 		# If we're seeing this bot again but it's been over 24h, reset the counter
@@ -293,7 +296,7 @@ def popmaps(desired_region):
 @limiter.limit("10/minute")
 def botnames():
 	bot_names = []
-	for pn in core.bot_names:
+	for pn in sorted(core.bot_names, reverse=True):
 		# Ignore names older than 24h
 		if time.time() - pn.last_seen >= 60 * 60 * 24:
 			continue
@@ -346,7 +349,7 @@ def stats():
 def namerules():
 	bnames = []
 	snames = []
-	for pn in core.bot_names:
+	for pn in sorted(core.bot_names, reverse=True):
 		# Ignore names older than 24h
 		if time.time() - pn.last_seen >= 60 * 60 * 24:
 			continue
