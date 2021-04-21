@@ -37,6 +37,9 @@ parser.add_argument("--workers", type=int, default=128)
 # If you store your key in api-key.txt, that will be used instead.
 parser.add_argument("--api-key", type=str)
 
+# Commit changed lists after running
+parser.add_argument("--commit", action="store_true")
+
 args = parser.parse_args()
 
 
@@ -213,3 +216,7 @@ for region in region_tf_lists:
 	shortname = region["shortname"]
 	for server in region["ip_list"]:
 		break
+
+
+if args.commit:
+	os.system("git add *.tf_list; git commit -m \"Update data (potato)\"")
