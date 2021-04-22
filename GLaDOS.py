@@ -78,7 +78,7 @@ class MoralityCore:
 		snoipin = threading.Thread(target=self.lucksman, args=(), daemon=True)
 		snoipin.start()
 
-		self.dupmatch = re.compile("^\(\d+\)")
+		self.dupmatch = re.compile("^\([1-9]\d?\)")
 
 		# Make a list of bot names publicly available for TF2BD rules list creators to use
 		self.bot_names = set()
