@@ -9,6 +9,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import json
 import os
+import pickle
 import re
 import socket
 import threading
@@ -72,6 +73,12 @@ class MoralityCore:
 		# We need to load this the first time
 		self.load_blacklist()
 
+		# Stops scanning when set to True
+		self.halt = False
+
+		# Signals the restart endpoint that it's okay to proceed
+		self.halted = False
+
 		# Run server scans in another thread
 		# This thread just repopulates the class object's data on bot maps,
 		# so it's okay to terminate it with the main thread
@@ -82,6 +89,22 @@ class MoralityCore:
 
 		# Make a list of bot names publicly available for TF2BD rules list creators to use
 		self.bot_names = set()
+
+		self.region_map_trackers = []
+
+		# If this is a soft restart, try to load saved data
+		try:
+			os.remove("soft_restart.dat")
+		except FileNotFoundError:
+			return
+		for vname in ["bot_names", "region_map_trackers"]:
+			try:
+				file = open(f"{vname}.pkl", "rb")
+				exec(f"self.{vname} = pickle.load(file)")
+				file.close()
+				print(f"Successfully loaded pickled data for self.{vname}")
+			except FileNotFoundError:
+				print(f"Failed to load pickled data for self.{vname}")
 
 	def load_blacklist(self):
 		self.patterns = []
@@ -223,6 +246,9 @@ class MoralityCore:
 			self.region_map_trackers = self.scan_servers()
 			elapsed = round(time.time() - start, 2)
 			print(f"Scans complete (took {elapsed} secs), sleeping...")
+			if self.halt:
+				self.halted = True
+				break
 			# Wait a minute between scans
 			time.sleep(60)
 
@@ -272,6 +298,30 @@ def reload():
 	core.load_blacklist()
 	core.bot_names = set()
 	return jsonify({"response": {"success": True}})
+
+
+# Save current data and terminate the backend.
+# Useful for using new code without re-collecting data.
+# In cases where old data is not compatible with new code,
+# reloading apache2 will result in GLaDOS ignoring any pickled data.
+@api.route("/restart")
+def restart():
+	if not whitelisted():
+		abort(403)
+	# Ask the core to stop doing stuff
+	core.halt = True
+	# Wait
+	while not core.halted:
+		time.sleep(0.100)
+	# Save stuff
+	for vname in ["bot_names", "region_map_trackers"]:
+		file = open(f"{vname}.pkl", "wb")
+		exec(f"pickle.dump(core.{vname}, file)")
+		file.close()
+	# Mark stuff as loadable (this is a soft restart)
+	os.system("touch soft_restart.dat")
+	# Crash
+	os.abort()
 
 
 # Return a list of map names to target
