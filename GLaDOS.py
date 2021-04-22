@@ -272,13 +272,10 @@ limiter = Limiter(
 cache = Cache(api)
 
 
-whitelist = []
-with open("ip_whitelist.txt", "r") as wl:
-	whitelist = wl.read().split("\n")[:-1]
-
-
 def whitelisted():
-	return request.remote_addr in whitelist
+	with open("ip_whitelist.txt", "r") as wl:
+		whitelist = wl.read().split("\n")[:-1]
+		return request.remote_addr in whitelist
 
 
 # Redirect to static content about the API
