@@ -356,7 +356,8 @@ def namerules():
 		# High confidence
 		if pn.times_seen >= 100:
 			bnames.append(pn)
-		elif pn.times_seen >= 10:
+		# Reasonably confident
+		elif pn.times_seen >= 30:
 			snames.append(pn)
 	data = {"$schema": "https://raw.githubusercontent.com/PazerOP/tf2_bot_detector/master/schemas/v3/rules.schema.json"}
 	data["file_info"] = {
