@@ -21,7 +21,7 @@ echo -e "\nSetting up crontab for potato.py..."
 if crontab -l 2>/dev/null | grep -q potato\.py; then
        echo "Already setup."
 else
-       (crontab -l 2>/dev/null; echo "0 6 * * * cd ~/GLaDOS && ./potato.py --commit &>/dev/null") | crontab -
+       (crontab -l 2>/dev/null; echo "0 6 * * * cd ~/GLaDOS && ./potato.py --commit --push &>/dev/null") | crontab -
 fi
 
 echo -e "\nAll done."
