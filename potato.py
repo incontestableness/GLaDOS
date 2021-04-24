@@ -12,6 +12,7 @@ import netaddr
 import os
 import pprint
 import requests
+import subprocess
 import sys
 import time
 
@@ -39,6 +40,9 @@ parser.add_argument("--api-key", type=str)
 
 # Commit changed lists after running
 parser.add_argument("--commit", action="store_true")
+
+# Push commited changes after running
+parser.add_argument("--push", action="store_true")
 
 args = parser.parse_args()
 
@@ -219,4 +223,18 @@ for region in region_tf_lists:
 
 
 if args.commit:
+	# Check git status for staged files
+	status, _ = subprocess.getstatusoutput("git status | grep \"Changes to be committed\"")
+	if status == 0:
+		print("Not committing because there are staged files.")
+		exit()
+	# Commit list changes
 	os.system("git add *.tf_list; git commit -m \"Update data (potato)\"")
+	if args.push:
+		# Check if this is the only new commit
+		status, _ = subprocess.getstatusoutput("git status | grep \"Your branch is ahead of 'origin/master' by 1 commit.\"")
+		if status != 0:
+			print("Not pushing because there is not only one commit (no list changes or unpushed commits).")
+			exit()
+		# Push updates
+		os.system("git push")
