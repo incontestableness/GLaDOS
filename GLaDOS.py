@@ -26,9 +26,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--server-debug", action="store_true")
 parser.add_argument("--timeout-debug", action="store_true")
 parser.add_argument("--name-debug", action="store_true")
-parser.add_argument("--scan-timeout", type=float, default=a2s.defaults.DEFAULT_TIMEOUT)
-parser.add_argument("--workers", type=int, default=128)
-parser.add_argument("--sleep-time", type=int, default=60)
+parser.add_argument("--scan-timeout", type=float, default=1.0)
+parser.add_argument("--workers", type=int, default=1024)
+parser.add_argument("--sleep-time", type=int, default=10)
 args = parser.parse_args()
 
 
