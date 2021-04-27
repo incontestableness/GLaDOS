@@ -136,6 +136,7 @@ def query_ip_list(ip_list):
 			json_obj = json.loads(response.content)
 		except json.decoder.JSONDecodeError:
 			print(response.content)
+			os.system("touch potato_ratelimited")
 			os.abort()
 		if json_obj["response"]["success"] != True:
 			raise RuntimeError(f"API call was not successful for IP {ip}!")
@@ -227,6 +228,11 @@ if args.commit:
 	status, _ = subprocess.getstatusoutput("git status | grep \"Changes to be committed\"")
 	if status == 0:
 		print("Not committing because there are staged files.")
+		exit()
+	# Check git status for non-staged changes
+	status, _ = subprocess.getstatusoutput("git status | grep -v \"\.tf_list\" | grep modified")
+	if status == 0:
+		print("Not committing because there are non-staged changes.")
 		exit()
 	# Commit list changes
 	os.system("git add *.tf_list; git commit -m \"Update data (potato)\"")

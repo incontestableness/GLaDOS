@@ -2,3 +2,4 @@ __pycache__
 api-key.txt
 bot_names.pkl
 region_map_trackers.pkl
+potato_ratelimited
