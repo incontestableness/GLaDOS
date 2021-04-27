@@ -244,11 +244,14 @@ class MoralityCore:
 			self.region_map_trackers = self.scan_servers()
 			elapsed = round(time.time() - start, 2)
 			print(f"Scans complete (took {elapsed} secs), sleeping...")
-			if self.halt:
-				self.halted = True
-				break
-			# Wait a minute between scans
-			time.sleep(60)
+			# Wait a minute between scans but exit when asked
+			elapsed = 0
+			while elapsed < 60:
+				time.sleep(5)
+				elapsed += 5
+				if self.halt:
+					self.halted = True
+					break
 
 
 # Create a GLaDOS core
