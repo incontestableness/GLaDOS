@@ -246,7 +246,7 @@ class MoralityCore:
 				popular_bot_maps.sort(reverse=True)
 				print(f"Sorted popular_bot_maps for {shortname}: {popular_bot_maps}")
 				print(f"Total bots seen in {shortname}: {total}")
-				tracker = {"shortname": shortname, "popular_bot_maps": popular_bot_maps}
+				tracker = {"shortname": shortname, "popular_bot_maps": popular_bot_maps, "malicious_online": total}
 				region_map_trackers.append(tracker)
 		return region_map_trackers
 
@@ -396,8 +396,12 @@ def exampleEventHandler(data):
 @cache.cached(forced_update=whitelisted, timeout=60)
 @limiter.limit("10/minute")
 def stats():
-	abort(503)
-	return jsonify({})
+	total = 0
+	per_region = []
+	for region in core.region_map_trackers:
+		total += region["malicious_online"]
+		per_region.append({region["shortname"]: region["malicious_online"]})
+	return jsonify({"response": {"total_malicious_online": total, "per_region": per_region}})
 
 
 # "You picked the wrong house, fool!"
