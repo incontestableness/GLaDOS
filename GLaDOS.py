@@ -23,6 +23,7 @@ if __name__ != "__main__":
 
 
 parser = argparse.ArgumentParser()
+parser.add_argument("--scanner-debug", action="store_true")
 parser.add_argument("--server-debug", action="store_true")
 parser.add_argument("--timeout-debug", action="store_true")
 parser.add_argument("--name-debug", action="store_true")
@@ -30,6 +31,11 @@ parser.add_argument("--scan-timeout", type=float, default=1.0)
 parser.add_argument("--workers", type=int, default=1024)
 parser.add_argument("--sleep-time", type=int, default=10)
 args = parser.parse_args()
+
+
+def scanner_debug(what):
+	if args.scanner_debug:
+		print(what)
 
 
 def server_debug(what):
@@ -227,7 +233,7 @@ class MoralityCore:
 				tf_list.close()
 				server_list = data.split("\n")[:-1]
 
-				print(f"Scanning {shortname}...")
+				scanner_debug(f"Scanning {shortname}...")
 				popular_bot_maps = []
 				total = 0
 				# Multithreading badassness. It takes about a minute to scan all the active TF2 dedicated servers.
@@ -244,8 +250,8 @@ class MoralityCore:
 					popular_bot_maps = self.updateMap(popular_bot_maps, map_name, bot_count, server_str)
 					total += bot_count
 				popular_bot_maps.sort(reverse=True)
-				print(f"Sorted popular_bot_maps for {shortname}: {popular_bot_maps}")
-				print(f"Total bots seen in {shortname}: {total}")
+				scanner_debug(f"Sorted popular_bot_maps for {shortname}: {popular_bot_maps}")
+				scanner_debug(f"Total bots seen in {shortname}: {total}")
 				tracker = {"shortname": shortname, "popular_bot_maps": popular_bot_maps, "malicious_online": total}
 				region_map_trackers.append(tracker)
 		return region_map_trackers
