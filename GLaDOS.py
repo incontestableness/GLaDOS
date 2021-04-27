@@ -23,12 +23,28 @@ if __name__ != "__main__":
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--debug", action="store_true")
+parser.add_argument("--server-debug", action="store_true")
+parser.add_argument("--timeout-debug", action="store_true")
+parser.add_argument("--name-debug", action="store_true")
+parser.add_argument("--scan-timeout", type=float, default=a2s.defaults.DEFAULT_TIMEOUT)
+parser.add_argument("--workers", type=int, default=128)
+parser.add_argument("--sleep-time", type=int, default=60)
 args = parser.parse_args()
 
 
-def debug(what):
-	if args.debug: print(what)
+def server_debug(what):
+	if args.server_debug:
+		print(what)
+
+
+def timeout_debug(what):
+	if args.timeout_debug:
+		print(what)
+
+
+def name_debug(what):
+	if args.name_debug:
+		print(what)
 
 
 # Represents a map and the number of malicious bots that have been seen on it in the last scan
@@ -119,7 +135,7 @@ class MoralityCore:
 	def check_name(self, name):
 		for pattern in self.patterns:
 			if pattern.fullmatch(name):
-				print(f"Name \"{name}\" matched pattern: {pattern.pattern}")
+				name_debug(f"Name \"{name}\" matched pattern: {pattern.pattern}")
 				return pattern
 		return None
 
@@ -156,18 +172,18 @@ class MoralityCore:
 		ip, port = server_str.split(":")
 		server = (ip, int(port))
 		try:
-			server_info = a2s.info(server)
+			server_info = a2s.info(server, timeout=args.scan_timeout)
 			if server_info.max_players == 6:
-				debug(f"Ignoring MVM server: {server_info.map_name} \t// {server_info.keywords}")
+				server_debug(f"Ignoring MVM server: {server_info.map_name} \t// {server_info.keywords}")
 				return None, None, None
 			elif server_info.max_players == 12:
-				debug(f"Ignoring competitive server: {server_info.map_name} \t// {server_info.keywords}")
+				server_debug(f"Ignoring competitive server: {server_info.map_name} \t// {server_info.keywords}")
 				return None, None, None
 			elif server_info.player_count == 0:
-				debug(f"Ignoring empty casual server: {server_info.map_name} \t// {server_info.keywords}")
+				server_debug(f"Ignoring empty casual server: {server_info.map_name} \t// {server_info.keywords}")
 				return None, None, None
 
-			players = a2s.players(server)
+			players = a2s.players(server, timeout=args.scan_timeout)
 			bot_count = 0
 			for p in players:
 				if self.check_name(p.name):
@@ -177,7 +193,7 @@ class MoralityCore:
 					self.bot_names = self.updatePName(self.bot_names, self.undupe(p.name))
 			return server_info.map_name, bot_count, server_str
 		except socket.timeout:
-			debug(f"Server {server_str} timed out after {a2s.defaults.DEFAULT_TIMEOUT} seconds...")
+			timeout_debug(f"Server {server_str} timed out after {args.scan_timeout} seconds...")
 			return None, None, None
 
 	# TODO: Returns a list of player names that are likely spoofing as another player
@@ -189,7 +205,7 @@ class MoralityCore:
 	def checkServer(self, server):
 		ip, port = server.split(":")
 		server = (ip, int(port))
-		players = a2s.players(server)
+		players = a2s.players(server, timeout=args.scan_timeout)
 		bot_count = 0
 		for p in players:
 			if self.check_name(p.name):
@@ -215,7 +231,7 @@ class MoralityCore:
 				popular_bot_maps = []
 				total = 0
 				# Multithreading badassness. It takes about a minute to scan all the active TF2 dedicated servers.
-				executor = concurrent.futures.ThreadPoolExecutor(max_workers=128)
+				executor = concurrent.futures.ThreadPoolExecutor(max_workers=args.workers)
 				future_objs = []
 				for server_str in server_list:
 					future_obj = executor.submit(self.scanServer, server_str)
@@ -244,11 +260,11 @@ class MoralityCore:
 			self.region_map_trackers = self.scan_servers()
 			elapsed = round(time.time() - start, 2)
 			print(f"Scans complete (took {elapsed} secs), sleeping...")
-			# Wait a minute between scans but exit when asked
+			# Wait between scans but exit when asked
 			elapsed = 0
-			while elapsed < 60:
-				time.sleep(5)
-				elapsed += 5
+			while elapsed < args.sleep_time:
+				time.sleep(1)
+				elapsed += 1
 				if self.halt:
 					self.halted = True
 					break
