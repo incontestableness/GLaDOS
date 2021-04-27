@@ -92,11 +92,7 @@ class MoralityCore:
 
 		self.region_map_trackers = []
 
-		# If this is a soft restart, try to load saved data
-		try:
-			os.remove("soft_restart.dat")
-		except FileNotFoundError:
-			return
+		# Load saved data where possible
 		for vname in ["bot_names", "region_map_trackers"]:
 			try:
 				file = open(f"{vname}.pkl", "rb")
@@ -299,8 +295,6 @@ def reload():
 
 # Save current data and terminate the backend.
 # Useful for using new code without re-collecting data.
-# In cases where old data is not compatible with new code,
-# reloading apache2 will result in GLaDOS ignoring any pickled data.
 @api.route("/restart")
 def restart():
 	if not whitelisted():
@@ -315,8 +309,6 @@ def restart():
 		file = open(f"{vname}.pkl", "wb")
 		exec(f"pickle.dump(core.{vname}, file)")
 		file.close()
-	# Mark stuff as loadable (this is a soft restart)
-	os.system("touch soft_restart.dat")
 	# Crash
 	os.abort()
 
