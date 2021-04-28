@@ -364,15 +364,18 @@ def popmaps(desired_region):
 @limiter.limit("10/minute")
 def botnames():
 	bot_names = []
+	now = time.time()
 	for pn in sorted(core.bot_names, reverse=True):
 		# Ignore names older than 24h
-		if time.time() - pn.last_seen >= 60 * 60 * 24:
+		if now - pn.last_seen >= 60 * 60 * 24:
 			continue
 		bot_names.append({
 			pn.name: {
 				"times_seen": pn.times_seen,
-				"first_seen": pn.first_seen,
-				"last_seen": pn.last_seen
+				"first_seen": f"{int((now - pn.first_seen) / 60)} minutes ago",
+				"last_seen": f"{int((now - pn.last_seen) / 60)} minutes ago",
+				"first_seen_epoch": pn.first_seen,
+				"last_seen_epoch": pn.last_seen
 			}
 		})
 	return jsonify({"response": {"bot_names": bot_names}})
