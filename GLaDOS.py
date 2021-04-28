@@ -201,6 +201,9 @@ class MoralityCore:
 		except socket.timeout:
 			timeout_debug(f"Server {server_str} timed out after {args.scan_timeout} seconds...")
 			return None, None, None
+		except a2s.exceptions.BrokenMessageError:
+			print(f"Server {server_str} sent a bad response...")
+			return None, None, None
 
 	# TODO: Returns a list of player names that are likely spoofing as another player
 	def getNamestealers(self, players):
