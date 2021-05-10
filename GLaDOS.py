@@ -288,13 +288,9 @@ api = Flask(__name__)
 config = {
 	"JSON_SORT_KEYS": False,
 	"CACHE_TYPE": "SimpleCache", # Flask-Caching
-	"CACHE_DEFAULT_TIMEOUT": 10
+	"CACHE_DEFAULT_TIMEOUT": 20
 }
 api.config.from_mapping(config)
-limiter = Limiter(
-	api,
-	key_func=get_remote_address,
-)
 cache = Cache(api)
 
 
@@ -307,7 +303,6 @@ def whitelisted():
 # Redirect to static content about the API
 @api.route("/")
 @cache.cached(timeout=60 * 60)
-@limiter.limit("10/minute")
 def root():
 	return redirect(location="/api.html")
 
@@ -345,7 +340,6 @@ def restart():
 # Return a list of map names to target
 @api.route("/popmaps/<desired_region>")
 @cache.cached(forced_update=whitelisted)
-@limiter.limit("10/minute")
 def popmaps(desired_region):
 	targeted = []
 	for region in core.region_map_trackers:
@@ -361,7 +355,6 @@ def popmaps(desired_region):
 # A bot will have a higher score at the end of the measurement period
 @api.route("/botnames")
 @cache.cached(forced_update=whitelisted)
-@limiter.limit("10/minute")
 def botnames():
 	bot_names = []
 	now = time.time()
@@ -386,9 +379,9 @@ def botnames():
 # portalgun will convert the namestealers list into a format hathook can process safely
 # Namestealing bots will be marked as soon as users/bots join the match
 # TODO: Make sure the IP given is within Valve's server ranges
+# A timeout of 3 seconds would give more recent data upon multiple calls but 30 would ensure stability. Play it safe for now.
 @api.route("/check/<server>")
-@cache.cached()
-@limiter.limit("20/minute")
+@cache.cached(timeout=30)
 def user_checkServer(server):
 	bot_count, namestealers = core.checkServer(server)
 	return jsonify({"response": {"server": server, "bot_count": bot_count, "namestealers": namestealers}})
@@ -397,15 +390,14 @@ def user_checkServer(server):
 # TODO: Statistics events
 @api.route("/event/exampleEvent/<data>")
 def exampleEventHandler(data):
-	abort(503)
+	if not whitelisted:
+		abort(403)
 	return jsonify({})
 
 
 # TODO: Cumulative statistics from bot events
-# Statistics will be cached for 60 seconds, compared to other calls which are by default 10
 @api.route("/stats")
-@cache.cached(forced_update=whitelisted, timeout=60)
-@limiter.limit("10/minute")
+@cache.cached(forced_update=whitelisted)
 def stats():
 	total = 0
 	per_region = []
@@ -417,10 +409,8 @@ def stats():
 
 # "You picked the wrong house, fool!"
 # Automatic TF2BD rules list creation based on current common bot names
-# Cached for five minutes
 @api.route("/namerules")
-@cache.cached(forced_update=whitelisted, timeout=60 * 5)
-@limiter.limit("10/minute")
+@cache.cached(forced_update=whitelisted)
 def namerules():
 	bnames = []
 	snames = []
