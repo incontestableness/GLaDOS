@@ -31,7 +31,7 @@ parser.add_argument("--scan-empty-only", action="store_true")
 # 64 workers takes 9-10 minutes to scan non-empty regions.
 # 128 workers takes about 4-5 minutes.
 # If you set workers to 256 you can get ratelimited in about two minutes ^:)
-parser.add_argument("--workers", type=int, default=128)
+parser.add_argument("--workers", type=int, default=64)
 
 # The endpoint potato.py uses does not require an API key.
 # This is only useful for testing provided a Valve-approved higher API call limit, or for the sake of more transparent API usage.
