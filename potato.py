@@ -61,7 +61,7 @@ empty_regions = "ams atl canm can cant canu dfw eze fra lhr ord par pwg pwj pwu 
 empty_regions = empty_regions.split(" ")
 
 
-# This function is a bit ugly. Too bad!
+# Returns lists of IP addresses that may be running TF2 servers in each region
 def getPossibleServers():
 	# The first thing we need to do is fetch a list of Valve's server IP ranges.
 	# SteamDatabase maintains a nice collection for us...
@@ -84,43 +84,22 @@ def getPossibleServers():
 			continue
 
 		data = region[1]
-		longname = shortname
-		if "desc" in data:
-			longname = data["desc"]
+		longname = data["desc"]
 		nicename = f"{longname} ({shortname})"
-		print(f"Region {nicename}:")
 		ip_list = set()
-		for i in ["relay_addresses", "relays", "service_address_ranges"]:
-			if i in data:
-				ip_data = data[i]
-				formatted = pprint.pformat(ip_data)
-				print(f"{i}: {formatted}")
-				for j in ip_data:
-					if type(j) == str:
-						# Is this a CIDR?
-						if "/" in j:
-							# Get a list of IPs in this range
-							for k in netaddr.IPNetwork(j):
-								ip_list.add(k)
-						# If there is a hyphen and colon, this is an IP with a port range
-						elif "-" in j and ":" in j:
-							ip = j.split(":")[0]
-							ip_list.add(ip)
-						# There wasn't both a hyphen and colon; this is just an IP range string like X.X.X.X-Y.Y.Y.Y
-						else:
-							start_ip, end_ip = j.split("-")
-							# Get a list of IPs in this range
-							for k in netaddr.IPRange(start_ip, end_ip):
-								ip_list.add(k)
-					else:
-						# We've been given a dict
-						ip_list.add(j["ipv4"])
-		print(f"Region {nicename} contains {len(ip_list)} IP addresses.\n")
+		for r in data["relays"]:
+			# We've been given a dict
+			ip_list.add(r["ipv4"])
+		for cidr in data["service_address_ranges"]:
+			# Get a list of IPs in this CIDR range
+			for ip in netaddr.IPNetwork(cidr):
+				ip_list.add(ip)
+		print(f"Region {nicename} contains {len(ip_list)} IP addresses.")
 		region_server_lists.append({"region": nicename, "shortname": shortname, "ip_list": ip_list})
 	return region_server_lists
 
 
-# The nasty function above handles that mess for us and gives us a ton of individual IP addresses to query the API for.
+# The function above gives us a ton of individual IP addresses to query the API for.
 region_server_lists = getPossibleServers()
 
 

@@ -1,2 +1,5 @@
 potato.py:
-	Someone should check whether there are actually TF2 servers in all three sections of the NetworkDatagramConfig JSON. Currently we just blindly scan everything, because it's easy enough to do so.
+	Someone should check whether there are actually TF2 servers in both the "relays" and "service_address_ranges" sections of the NetworkDatagramConfig JSON. Currently we just blindly scan everything, because it's easy enough to do so. Also of note might be the new "groups" list.
+
+GLaDOS.py:
+	Stuff that I'll get around to soon™️
