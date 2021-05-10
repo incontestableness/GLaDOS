@@ -363,12 +363,11 @@ def botnames():
 		if now - pn.last_seen >= 60 * 60 * 24:
 			continue
 		bot_names.append({
-			pn.name: {
+			"name": pn.name,
+			"properties": {
 				"times_seen": pn.times_seen,
 				"first_seen": f"{int((now - pn.first_seen) / 60)} minutes ago",
-				"last_seen": f"{int((now - pn.last_seen) / 60)} minutes ago",
-				"first_seen_epoch": pn.first_seen,
-				"last_seen_epoch": pn.last_seen
+				"last_seen": f"{int((now - pn.last_seen) / 60)} minutes ago"
 			}
 		})
 	return jsonify({"response": {"bot_names": bot_names}})
