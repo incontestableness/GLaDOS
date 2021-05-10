@@ -131,7 +131,7 @@ class MoralityCore:
 			name_blacklist = data.split("\n")[:-1]
 			for pattern in name_blacklist:
 				# Trust me, this entire line is necessary
-				pattern = pattern.encode().decode("unicode-escape").encode("latin").decode()
+				pattern = pattern.encode().decode("unicode-escape").encode("UTF-8").decode()
 				# https://docs.python.org/3/library/re.html#re.ASCII
 				compiled = re.compile(pattern, flags=re.ASCII)
 				self.patterns.append(compiled)
