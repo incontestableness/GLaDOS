@@ -121,7 +121,7 @@ def query_ip_list(ip_list):
 			raise RuntimeError(f"API call was not successful for IP {ip}!")
 		servers = json_obj["response"]["servers"]
 		if len(servers) == 0:
-			for port in range(27015, 27080):
+			for port in range(27015, 27085 + 1):
 				to_remove.append(f"{ip}:{port}")
 		for i in servers:
 			if i["appid"] == 440:
