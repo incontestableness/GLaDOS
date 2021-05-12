@@ -440,9 +440,17 @@ def stats():
 @api.route("/namerules")
 @cache.cached(forced_update=whitelisted)
 def namerules():
+	cpats = set()
 	bnames = []
 	snames = []
 	for pn in sorted(core.bot_names, reverse=True):
+		# Pop names off. If they match a blacklist pattern, use that pattern as the rule. Make rules for the rest.
+		pat = core.check_name(pn.name)
+		if pat is not None:
+			if pat != core.dupematch:
+				cpats.add(pat)
+				continue
+			else: print("wow dupematch")
 		# Ignore names older than 24h
 		if time.time() - pn.last_seen >= 60 * 60 * 24:
 			continue
@@ -461,6 +469,20 @@ def namerules():
 		"update_url": "http://milenko.ml/api/namerules"
 	}
 	rules = []
+	for pat in cpats:
+		rule = {"actions": {"transient_mark": ["cheater"]}}
+		# Add 1 because core.dupematch doesn't have a trailing "?"
+		short = pat.pattern[len(core.dupematch.pattern) + 1:]
+		short = short.replace("\"", "\\\"")
+		rule["description"] = f"Confirmed pattern: {short}"
+		rule["triggers"] = {
+			"username_text_match": {
+				"case_sensitive": True,
+				"mode": "regex",
+				"patterns": [pat.pattern]
+			}
+		}
+		rules.append(rule)
 	for pn in bnames:
 		rule = {"actions": {"transient_mark": ["cheater"]}}
 		json_quote_escaped = pn.name.replace("\"", "\\\"")
