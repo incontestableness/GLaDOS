@@ -5,8 +5,6 @@ import argparse
 import concurrent.futures
 from flask import abort, Flask, jsonify, redirect, request
 from flask_caching import Cache
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
 import json
 import os
 import pickle
@@ -27,9 +25,10 @@ parser.add_argument("--scanner-debug", action="store_true")
 parser.add_argument("--server-debug", action="store_true")
 parser.add_argument("--timeout-debug", action="store_true")
 parser.add_argument("--name-debug", action="store_true")
-parser.add_argument("--scan-timeout", type=float, default=1.0)
+# You may wish to tune this based on your ping to the servers
+# cat *.tf_list | grep "[0-9.]*:" -o | sort -u | grep "[0-9.]*" -o | xargs -n 1 ping -c 1 -n -w 1 | grep time=
+parser.add_argument("--scan-timeout", type=float, default=0.500)
 parser.add_argument("--workers", type=int, default=1024)
-parser.add_argument("--sleep-time", type=int, default=10)
 args = parser.parse_args()
 
 
@@ -92,8 +91,9 @@ class PName:
 # Handles active server scanning
 class MoralityCore:
 	def __init__(self):
-		# We need to load this the first time
+		# We need to load these the first time
 		self.load_blacklist()
+		self.loadTFLs()
 
 		# Stops scanning when set to True
 		self.halt = False
@@ -226,64 +226,70 @@ class MoralityCore:
 		namestealers = self.getNamestealers(players)
 		return bot_count, namestealers
 
-	# Purpose: Scan TF2 gameservers from cached lists to determine what maps malicious bots are currently on so that they can be targeted every time bots queue.
-	# TODO: This function does NOT handle namesteal detection yet.
-	def scan_servers(self):
+	# Loads cached TF2 server lists into the core
+	def loadTFLs(self):
+		tfls = []
 		contents = os.listdir()
-		region_map_trackers = []
 		for filename in contents:
 			if filename.endswith(".tf_list"):
 				shortname = filename.split(".tf_list")[0]
-
 				tf_list = open(filename, "r")
 				data = tf_list.read()
 				tf_list.close()
 				server_list = data.split("\n")[:-1]
+				tfls.append({"shortname": shortname, "server_list": server_list})
+		self.tfls = tfls
+		self.last_tfl_load = time.time()
+		print("Loaded TF lists!")
 
-				scanner_debug(f"Scanning {shortname}...")
-				popular_bot_maps = []
-				casual_total = 0
-				bot_total = 0
-				# Multithreading badassness. It takes about a minute to scan all the active TF2 dedicated servers.
-				executor = concurrent.futures.ThreadPoolExecutor(max_workers=args.workers)
-				future_objs = []
-				for server_str in server_list:
-					future_obj = executor.submit(self.scanServer, server_str)
-					future_objs.append(future_obj)
-				for future_obj in concurrent.futures.as_completed(future_objs):
-					map_name, total_players, bot_count, server_str = future_obj.result()
-					# Cheap fix
-					if map_name is None:
-						continue
-					popular_bot_maps = self.updateMap(popular_bot_maps, map_name, bot_count, server_str)
-					casual_total += total_players
-					bot_total += bot_count
-				popular_bot_maps.sort(reverse=True)
-				scanner_debug(f"Sorted popular_bot_maps for {shortname}: {popular_bot_maps}")
-				scanner_debug(f"Total players seen in {shortname}: {casual_total}")
-				scanner_debug(f"Total bots seen in {shortname}: {bot_total}")
-				tracker = {"shortname": shortname, "popular_bot_maps": popular_bot_maps, "casual_in_game": casual_total, "malicious_in_game": bot_total}
-				region_map_trackers.append(tracker)
+	# Purpose: Scan TF2 gameservers from cached lists to determine what maps malicious bots are currently on so that they can be targeted every time bots queue.
+	# TODO: This function does NOT handle namesteal detection yet.
+	def scan_servers(self):
+		region_map_trackers = []
+		for region in self.tfls:
+			shortname = region["shortname"]
+			server_list = region["server_list"]
+			scanner_debug(f"Scanning {shortname}...")
+			popular_bot_maps = []
+			casual_total = 0
+			bot_total = 0
+			# Multithreading badassness. We can scan all the active TF2 dedicated servers in 10 seconds flat.
+			executor = concurrent.futures.ThreadPoolExecutor(max_workers=args.workers)
+			future_objs = []
+			for server_str in server_list:
+				future_obj = executor.submit(self.scanServer, server_str)
+				future_objs.append(future_obj)
+			for future_obj in concurrent.futures.as_completed(future_objs):
+				map_name, total_players, bot_count, server_str = future_obj.result()
+				# Cheap fix
+				if map_name is None:
+					continue
+				popular_bot_maps = self.updateMap(popular_bot_maps, map_name, bot_count, server_str)
+				casual_total += total_players
+				bot_total += bot_count
+			popular_bot_maps.sort(reverse=True)
+			scanner_debug(f"Sorted popular_bot_maps for {shortname}: {popular_bot_maps}")
+			scanner_debug(f"Total players seen in {shortname}: {casual_total}")
+			scanner_debug(f"Total bots seen in {shortname}: {bot_total}")
+			tracker = {"shortname": shortname, "popular_bot_maps": popular_bot_maps, "casual_in_game": casual_total, "malicious_in_game": bot_total}
+			region_map_trackers.append(tracker)
 		return region_map_trackers
 
 	# GLaDOS scanning thread
 	def lucksman(self):
 		while True:
 			# Start a scan
-			print("Lucksman starting scans...")
 			start = time.time()
 			# Give new, completed data to the API by updating the class object-scoped variable
 			self.region_map_trackers = self.scan_servers()
 			elapsed = round(time.time() - start, 2)
-			print(f"Scans complete (took {elapsed} secs), sleeping...")
-			# Wait between scans but exit when asked
-			elapsed = 0
-			while elapsed < args.sleep_time:
-				time.sleep(1)
-				elapsed += 1
-				if self.halt:
-					self.halted = True
-					break
+			print(f"Scans complete (took {elapsed} secs)...")
+			# Reload lists hourly
+			if time.time() - self.last_tfl_load > 60 * 60:
+				self.loadTFLs()
+			if self.halt:
+				self.halted = True
+				break
 
 
 # Create a GLaDOS core
@@ -295,7 +301,7 @@ api = Flask(__name__)
 config = {
 	"JSON_SORT_KEYS": False,
 	"CACHE_TYPE": "SimpleCache", # Flask-Caching
-	"CACHE_DEFAULT_TIMEOUT": 20
+	"CACHE_DEFAULT_TIMEOUT": 10
 }
 api.config.from_mapping(config)
 cache = Cache(api)
