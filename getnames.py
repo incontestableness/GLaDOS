@@ -10,6 +10,8 @@ import requests
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--no-count", action="store_true")
+parser.add_argument("--sort-by-count", action="store_true")
+parser.add_argument("--minimum-count", type=int, default=0)
 args = parser.parse_args()
 
 
@@ -22,8 +24,13 @@ for i in response.json()["response"]["bot_names"]:
 	fixed = fixed.replace("\\ ", " ")
 	botnames.append([fixed, i["properties"]["times_seen"]])
 
-botnames.sort()
+if args.sort_by_count:
+	botnames = sorted(botnames, key = lambda x: x[1])
+else:
+	botnames.sort()
 for name, count in botnames:
+	if count < args.minimum_count:
+		continue
 	if args.no_count:
 		print(name)
 	else:
