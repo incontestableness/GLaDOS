@@ -16,7 +16,11 @@ args = parser.parse_args()
 botnames = []
 response = requests.get("http://milenko.ml/api/botnames")
 for i in response.json()["response"]["bot_names"]:
-	botnames.append([re.escape(i["name"]).replace("\\ ", " ").encode("unicode-escape").decode(), i["properties"]["times_seen"]])
+	unicode_escaped = i["name"].encode("unicode-escape").decode()
+	re_escaped = re.escape(unicode_escaped)
+	fixed = re_escaped.replace("\\\\", "\\")
+	fixed = fixed.replace("\\ ", " ")
+	botnames.append([fixed, i["properties"]["times_seen"]])
 
 botnames.sort()
 for name, count in botnames:
