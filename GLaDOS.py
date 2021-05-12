@@ -456,7 +456,7 @@ def namerules():
 			"username_text_match": {
 				"case_sensitive": True,
 				"mode": "regex",
-				"patterns": [f"\([1-9]\d?\)?{re.escape(json_quote_escaped)}"]
+				"patterns": [f"(\([1-9]\d?\))?{re.escape(json_quote_escaped)}"]
 			}
 		}
 		rules.append(rule)
@@ -468,7 +468,7 @@ def namerules():
 			"username_text_match": {
 				"case_sensitive": True,
 				"mode": "regex",
-				"patterns": [f"\([1-9]\d?\)?{re.escape(json_quote_escaped)}"]
+				"patterns": [f"(\([1-9]\d?\))?{re.escape(json_quote_escaped)}"]
 			}
 		}
 		rules.append(rule)
