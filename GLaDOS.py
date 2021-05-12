@@ -380,8 +380,9 @@ def botnames():
 		# Ignore names older than 24h
 		if now - pn.last_seen >= 60 * 60 * 24:
 			continue
+		json_quote_escaped = pn.name.replace("\"", "\\\"")
 		bot_names.append({
-			"name": pn.name,
+			"name": json_quote_escaped,
 			"properties": {
 				"times_seen": pn.times_seen,
 				"first_seen": f"{int((now - pn.first_seen) / 60)} minutes ago",
