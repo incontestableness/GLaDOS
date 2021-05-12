@@ -440,11 +440,12 @@ def namerules():
 		# Ignore names older than 24h
 		if time.time() - pn.last_seen >= 60 * 60 * 24:
 			continue
-		# High confidence
-		if pn.times_seen >= 100:
+		# Scans run every 10 seconds. This is taken into account.
+		# Very high confidence. At a minimum, a single user with a name starting with (N) over the full course of almost 3 hours.
+		if pn.times_seen >= 1000:
 			bnames.append(pn)
-		# Reasonably confident
-		elif pn.times_seen >= 30:
+		# Reasonably confident. At a minimum, a single user with a name starting with (N) over the full course of an hour.
+		elif pn.times_seen >= 360:
 			snames.append(pn)
 	data = {"$schema": "https://raw.githubusercontent.com/PazerOP/tf2_bot_detector/master/schemas/v3/rules.schema.json"}
 	data["file_info"] = {
