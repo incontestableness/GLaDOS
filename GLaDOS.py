@@ -181,29 +181,33 @@ class MoralityCore:
 			server_info = a2s.info(server, timeout=args.scan_timeout)
 			if server_info.max_players == 6:
 				server_debug(f"Ignoring MVM server: {server_info.map_name} \t// {server_info.keywords}")
-				return None, None, None
+				return None, None, None, None
 			elif server_info.max_players == 12:
 				server_debug(f"Ignoring competitive server: {server_info.map_name} \t// {server_info.keywords}")
-				return None, None, None
+				return None, None, None, None
 			elif server_info.player_count == 0:
 				server_debug(f"Ignoring empty casual server: {server_info.map_name} \t// {server_info.keywords}")
-				return None, None, None
+				return None, None, None, None
 
 			players = a2s.players(server, timeout=args.scan_timeout)
+			total_players = 0
 			bot_count = 0
 			for p in players:
+				if p.name == "":
+					continue
+				total_players += 1
 				if self.check_name(p.name):
 					# This can run multiple times, increasing map "score" by bot count, unless we break out of the loop.
 					# Currently we allow it to do so.
 					bot_count += 1
 					self.bot_names = self.updatePName(self.bot_names, self.undupe(p.name))
-			return server_info.map_name, bot_count, server_str
+			return server_info.map_name, total_players, bot_count, server_str
 		except socket.timeout:
 			timeout_debug(f"Server {server_str} timed out after {args.scan_timeout} seconds...")
-			return None, None, None
+			return None, None, None, None
 		except a2s.exceptions.BrokenMessageError:
 			print(f"Server {server_str} sent a bad response...")
-			return None, None, None
+			return None, None, None, None
 
 	# TODO: Returns a list of player names that are likely spoofing as another player
 	def getNamestealers(self, players):
@@ -238,7 +242,8 @@ class MoralityCore:
 
 				scanner_debug(f"Scanning {shortname}...")
 				popular_bot_maps = []
-				total = 0
+				casual_total = 0
+				bot_total = 0
 				# Multithreading badassness. It takes about a minute to scan all the active TF2 dedicated servers.
 				executor = concurrent.futures.ThreadPoolExecutor(max_workers=args.workers)
 				future_objs = []
@@ -246,16 +251,18 @@ class MoralityCore:
 					future_obj = executor.submit(self.scanServer, server_str)
 					future_objs.append(future_obj)
 				for future_obj in concurrent.futures.as_completed(future_objs):
-					map_name, bot_count, server_str = future_obj.result()
+					map_name, total_players, bot_count, server_str = future_obj.result()
 					# Cheap fix
 					if map_name is None:
 						continue
 					popular_bot_maps = self.updateMap(popular_bot_maps, map_name, bot_count, server_str)
-					total += bot_count
+					casual_total += total_players
+					bot_total += bot_count
 				popular_bot_maps.sort(reverse=True)
 				scanner_debug(f"Sorted popular_bot_maps for {shortname}: {popular_bot_maps}")
-				scanner_debug(f"Total bots seen in {shortname}: {total}")
-				tracker = {"shortname": shortname, "popular_bot_maps": popular_bot_maps, "malicious_online": total}
+				scanner_debug(f"Total players seen in {shortname}: {casual_total}")
+				scanner_debug(f"Total bots seen in {shortname}: {bot_total}")
+				tracker = {"shortname": shortname, "popular_bot_maps": popular_bot_maps, "casual_in_game": casual_total, "malicious_in_game": bot_total}
 				region_map_trackers.append(tracker)
 		return region_map_trackers
 
@@ -398,12 +405,22 @@ def exampleEventHandler(data):
 @api.route("/stats")
 @cache.cached(forced_update=whitelisted)
 def stats():
-	total = 0
-	per_region = []
+	casual_total = 0
+	bot_total = 0
+	players_per_region = []
+	bots_per_region = []
 	for region in core.region_map_trackers:
-		total += region["malicious_online"]
-		per_region.append({region["shortname"]: region["malicious_online"]})
-	return jsonify({"response": {"total_malicious_online": total, "per_region": per_region}})
+		casual_total += region["casual_in_game"]
+		bot_total += region["malicious_in_game"]
+		players_per_region.append({region["shortname"]: region["casual_in_game"]})
+		bots_per_region.append({region["shortname"]: region["malicious_in_game"]})
+	return jsonify({"response": {
+			"casual_in_game": {
+				"totals": {"all_players": casual_total, "malicious_bots": bot_total},
+				"per_region": {"all_players": players_per_region, "malicious_bots": bots_per_region}
+			}
+		}
+	})
 
 
 # "You picked the wrong house, fool!"
