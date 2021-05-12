@@ -1,4 +1,3 @@
-\([1-9]\d?\).*
 braaaap \d+
 shoppy\.gg/@d3fc0n6
 shoppy\.gg/@Spicy_engineer

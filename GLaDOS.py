@@ -107,7 +107,7 @@ class MoralityCore:
 		snoipin = threading.Thread(target=self.lucksman, args=(), daemon=True)
 		snoipin.start()
 
-		self.dupmatch = re.compile("^\([1-9]\d?\)")
+		self.dupematch = re.compile("^(\([1-9]\d?\))")
 
 		# Make a list of bot names publicly available for TF2BD rules list creators to use
 		self.bot_names = set()
@@ -132,6 +132,8 @@ class MoralityCore:
 			for pattern in name_blacklist:
 				# Trust me, this entire line is necessary
 				pattern = pattern.encode().decode("unicode-escape").encode("UTF-8").decode()
+				# Add the prefix
+				pattern = "^(\([1-9]\d?\))?" + pattern
 				# https://docs.python.org/3/library/re.html#re.ASCII
 				compiled = re.compile(pattern, flags=re.ASCII)
 				self.patterns.append(compiled)
@@ -143,11 +145,14 @@ class MoralityCore:
 			if pattern.fullmatch(name):
 				name_debug(f"Name \"{name}\" matched pattern: {pattern.pattern}")
 				return pattern
+		if self.dupematch.match(name):
+			print(f"Name \"{name}\" matched dupe pattern!")
+			return self.dupematch
 		return None
 
 	# Removes the leading (N) from names
 	def undupe(self, name):
-		return re.sub(self.dupmatch, "", name)
+		return re.sub(self.dupematch, "", name)
 
 	# Helper function to update or create the PName for the given bot name and return an updated list
 	def updatePName(self, bot_names, name):
