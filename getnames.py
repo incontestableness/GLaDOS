@@ -9,9 +9,9 @@ import requests
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--no-count", action="store_true")
-parser.add_argument("--sort-by-count", action="store_true")
-parser.add_argument("--minimum-count", type=int, default=0)
+parser.add_argument("-q", "--no-count", action="store_true")
+parser.add_argument("-s", "--sort-by-count", action="store_true")
+parser.add_argument("-m", "--minimum-count", type=int, default=0)
 args = parser.parse_args()
 
 
