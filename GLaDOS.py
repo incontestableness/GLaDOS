@@ -490,7 +490,7 @@ def namerules():
 			"username_text_match": {
 				"case_sensitive": True,
 				"mode": "regex",
-				"patterns": [pat.pattern]
+				"patterns": [f"{pat.pattern}"]
 			}
 		}
 		rules.append(rule)
