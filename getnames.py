@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Quick script to print bot names from the API in name_blacklist.txt format
+# Quick script to print bot names from the API in various formats
 
 import argparse
 import re
@@ -12,6 +12,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-q", "--no-count", action="store_true")
 parser.add_argument("-s", "--sort-by-count", action="store_true")
 parser.add_argument("-m", "--minimum-count", type=int, default=0)
+parser.add_argument("-p", "--print", action="store_true")
+parser.add_argument("-l", "--live", action="store_true")
 args = parser.parse_args()
 
 
@@ -22,16 +24,22 @@ for i in response.json()["response"]["bot_names"]:
 	re_escaped = re.escape(unicode_escaped)
 	fixed = re_escaped.replace("\\\\", "\\")
 	fixed = fixed.replace("\\ ", " ")
-	botnames.append([fixed, i["properties"]["times_seen"]])
+	botnames.append([fixed, i["properties"]["times_seen"], i["properties"]["last_seen"] == "0 minutes ago"])
 
 if args.sort_by_count:
 	botnames = sorted(botnames, key = lambda x: x[1])
 else:
 	botnames.sort()
-for name, count in botnames:
+for name, count, live in botnames:
+	if args.live and not live:
+		continue
 	if count < args.minimum_count:
 		continue
 	if args.no_count:
 		print(name)
+	elif args.print:
+		decoded = name.encode().decode("unicode-escape")
+		spacing = " " * ((160 - len(name)) - len(decoded))
+		print(f"{name}{spacing}{decoded}")
 	else:
-		print(name.ljust(160), count)
+		print(name.ljust(80), count)
