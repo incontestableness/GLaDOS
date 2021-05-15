@@ -6,6 +6,8 @@ import concurrent.futures
 from flask import abort, Flask, jsonify, redirect, request
 from flask_caching import Cache
 import json
+import logging
+from logging.handlers import RotatingFileHandler
 import os
 import pickle
 import re
@@ -30,6 +32,15 @@ parser.add_argument("--name-debug", action="store_true")
 parser.add_argument("--scan-timeout", type=float, default=0.500)
 parser.add_argument("--workers", type=int, default=1024)
 args = parser.parse_args()
+
+
+logging.basicConfig(
+        handlers = [RotatingFileHandler("log.txt", maxBytes=1024 * 1024, backupCount=5)],
+        level = logging.INFO,
+        format = "[%(asctime)s] [%(funcName)s:%(lineno)d] %(message)s",
+        datefmt = "%a %b %d @ %R:%S")
+logger = logging.getLogger()
+print = logger.info
 
 
 def scanner_debug(what):
