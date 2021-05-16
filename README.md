@@ -1,5 +1,7 @@
 # GLaDOS
 
+![Who are you?](https://i.imgur.com/0gbb1AH.png)
+
 
 ## What is GLaDOS?
 
