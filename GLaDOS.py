@@ -12,6 +12,7 @@ import os
 import pickle
 import re
 import socket
+from string import ascii_letters, digits, punctuation
 import threading
 import time
 
@@ -27,6 +28,7 @@ parser.add_argument("--scanner-debug", action="store_true")
 parser.add_argument("--server-debug", action="store_true")
 parser.add_argument("--timeout-debug", action="store_true")
 parser.add_argument("--name-debug", action="store_true")
+parser.add_argument("--namesteal-debug", action="store_true")
 # You may wish to tune this based on your ping to the servers
 # cat *.tf_list | grep "[0-9.]*:" -o | sort -u | grep "[0-9.]*" -o | xargs -n 1 ping -c 1 -n -w 1 | grep time=
 parser.add_argument("--scan-timeout", type=float, default=0.500)
@@ -60,6 +62,11 @@ def timeout_debug(what):
 
 def name_debug(what):
 	if args.name_debug:
+		print(what)
+
+
+def namesteal_debug(what):
+	if args.namesteal_debug:
 		print(what)
 
 
@@ -103,7 +110,7 @@ class PName:
 class MoralityCore:
 	def __init__(self):
 		# We need to load these the first time
-		self.load_blacklist()
+		self.load_blacklists()
 		self.loadTFLs()
 
 		# Stops scanning when set to True
@@ -135,9 +142,10 @@ class MoralityCore:
 			except FileNotFoundError:
 				print(f"Failed to load pickled data for self.{vname}")
 
-	def load_blacklist(self):
+	def load_blacklists(self):
 		self.patterns = []
-		with open("name_blacklist.txt") as bl:
+		self.evasion_sequences = []
+		with open("name_blacklist.txt", "r") as bl:
 			data = bl.read()
 			name_blacklist = data.split("\n")[:-1]
 			for pattern in name_blacklist:
@@ -148,7 +156,14 @@ class MoralityCore:
 				# https://docs.python.org/3/library/re.html#re.ASCII
 				compiled = re.compile(pattern, flags=re.ASCII)
 				self.patterns.append(compiled)
-		print("Blacklist loaded!")
+		print("Name pattern blacklist loaded!")
+		with open("evade_blacklist.txt", "r") as bl:
+			data = bl.read()
+			evade_blacklist = data.split("\n")[:-1]
+			for pattern in evade_blacklist:
+				compiled = re.compile(pattern)
+				self.evasion_sequences.append(compiled)
+		print("Evasion sequences loaded!")
 
 	# Returns the first pattern that matches the name, if any
 	def check_name(self, name):
@@ -217,6 +232,7 @@ class MoralityCore:
 					# Currently we allow it to do so.
 					bot_count += 1
 					self.bot_names = self.updatePName(self.bot_names, self.undupe(p.name))
+			bot_count += len(self.getNamestealers(players))
 			return server_info.map_name, total_players, bot_count, server_str
 		except socket.timeout:
 			timeout_debug(f"Server {server_str} timed out after {args.scan_timeout} seconds...")
@@ -225,9 +241,83 @@ class MoralityCore:
 			print(f"Server {server_str} sent a bad response...")
 			return None, None, None, None
 
-	# TODO: Returns a list of player names that are likely spoofing as another player
+	# Returns an ASCII-only string
+	def strip_name(self, name):
+		allowed = ascii_letters + digits + punctuation + " "
+		return "".join(filter(lambda x: x in allowed, name))
+
+	# Returns true if the name has evading character sequences in it
+	def evaded(self, name):
+		for seq in self.evasion_sequences:
+			match = seq.search(name)
+			if match is not None:
+				return True
+		return False
+
+	# Return a name suitable for printing
+	def unevade(self, name):
+		return name.encode("unicode-escape").decode()
+
+	# Returns a list of player names that are likely spoofing as another player or evading name detection
 	def getNamestealers(self, players):
-		return []
+		# Extract names from Player objects
+		names = []
+		for p in players:
+			if p.name != "":
+				names.append(p.name)
+		namestealers = set()
+		to_check = names
+		for first_name in names:
+			# Don't check first_name against itself
+			to_check = to_check[1:]
+			fs = self.strip_name(first_name)
+			# If the name is empty after stripping non-ascii characters, skip it
+			if len(fs) == 0 or fs == " ":
+				continue
+			matches = []
+			for second_name in to_check:
+				ss = self.strip_name(second_name)
+				if len(ss) == 0 or ss == " ":
+					continue
+				if fs == ss:
+					matches.append(second_name)
+			for m in matches:
+				if self.evaded(m) and not self.evaded(first_name):
+					namesteal_debug(f"{self.unevade(m)} stole {self.unevade(first_name)}'s name!")
+					namestealers.add(m)
+					try:
+						to_check.remove(m)
+					except:
+						pass
+				elif self.evaded(first_name) and not self.evaded(m):
+					namesteal_debug(f"{self.unevade(first_name)} stole {self.unevade(m)}'s name!")
+					namestealers.add(first_name)
+					try:
+						to_check.remove(first_name)
+					except:
+						pass
+				elif (not self.evaded(first_name)) and (not self.evaded(m)):
+					print("WARNING: evaded() didn't catch the injected chars!")
+					print(f"First name: {self.unevade(first_name)}")
+					print(f"Second name: {self.unevade(m)}")
+					# Throw these in so getnames.py can deal with it
+					self.botnames = self.updatePName(self.bot_names, self.undupe(first_name))
+					self.botnames = self.updatePName(self.bot_names, self.undupe(first_name))
+				else:
+					namesteal_debug(f"{self.unevade(first_name)} and {self.unevade(m)} are char injecting")
+					namestealers.add(first_name)
+					namestealers.add(m)
+					try:
+						to_check.remove(first_name)
+					except:
+						pass
+					try:
+						to_check.remove(m)
+					except:
+						pass
+		if len(namestealers) > 0:
+			namesteal_debug(f"{len(namestealers)} namestealers: {namestealers}")
+		return namestealers
 
 	# This function is called when a user or bot is assigned a match server
 	# In addition to checking regex patterns, it also looks for namestealers
@@ -259,7 +349,6 @@ class MoralityCore:
 		print("Loaded TF lists!")
 
 	# Purpose: Scan TF2 gameservers from cached lists to determine what maps malicious bots are currently on so that they can be targeted every time bots queue.
-	# TODO: This function does NOT handle namesteal detection yet.
 	def scan_servers(self):
 		region_map_trackers = []
 		for region in self.tfls:
@@ -342,7 +431,7 @@ def root():
 def reload():
 	if not whitelisted():
 		abort(403)
-	core.load_blacklist()
+	core.load_blacklists()
 	return jsonify({"response": {"success": True}})
 
 
