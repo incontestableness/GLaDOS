@@ -272,12 +272,14 @@ class MoralityCore:
 			to_check = to_check[1:]
 			fs = self.strip_name(first_name)
 			# If the name is empty after stripping non-ascii characters, skip it
-			if len(fs) == 0 or fs == " ":
+			is_all_spaces = fs.replace(" ", "") == ""
+			if len(fs) == 0 or is_all_spaces:
 				continue
 			matches = []
 			for second_name in to_check:
 				ss = self.strip_name(second_name)
-				if len(ss) == 0 or ss == " ":
+				is_all_spaces = ss.replace(" ", "") == ""
+				if len(ss) == 0 or is_all_spaces:
 					continue
 				if fs == ss:
 					matches.append(second_name)
