@@ -18,6 +18,7 @@ parser.add_argument("-l", "--live", action="store_true", help="Only use names se
 parser.add_argument("-e", "--evades", action="store_true", help="Find evading character sequences in use.")
 parser.add_argument("-a", "--append-evades", action="store_true", help="Read evades from evade_blacklist.txt and print them alongside those found during this run for easy updating.")
 parser.add_argument("-c", "--check", type=str, help="Check if a unicode escape is allowed.")
+parser.add_argument("--single-only", action="store_true", help="Only process single-character evade sequences.")
 args = parser.parse_args()
 
 
@@ -98,12 +99,14 @@ for e in evades_copy:
 	letterlike_symbols = (u"\u2100", u"\u214F")
 	miscellaneous_symbols = (u"\u2600", u"\u26FF")
 	dingbats = (u"\u2700", u"\u27BF")
+	supplemental_punctuation = (u"\u2E00", u"\u2E7F")
 	hiragana = (u"\u3040", u"\u309F")
+	katakana = (u"\u30A0", u"\u30FF")
 	cjk_unified_ideographs = (u"\u4E00", u"\u9FFF")
 	hangul_syllables = (u"\uAC00", u"\uD7AF")
 	javanese = (u"\uA980", u"\uA9DF")
 	whitelist_1 = (u"\uFFFD", u"\uFFFD")
-	allowed = [latin_1_supplement, latin_extended_a, latin_extended_b, cryllic, arabic, tibetan, phonetic_extensions, latin_extended_additional, letterlike_symbols, miscellaneous_symbols, dingbats, hiragana, cjk_unified_ideographs, hangul_syllables, javanese, whitelist_1]
+	allowed = [latin_1_supplement, latin_extended_a, latin_extended_b, cryllic, arabic, tibetan, phonetic_extensions, latin_extended_additional, letterlike_symbols, miscellaneous_symbols, dingbats, supplemental_punctuation, hiragana, katakana, cjk_unified_ideographs, hangul_syllables, javanese, whitelist_1]
 	blacklist = ["\xb2"]
 	if args.check:
 		decoded = args.check.encode().decode("unicode-escape")
@@ -136,10 +139,12 @@ for e in evades_copy:
 if args.evades:
 	evades = sorted(evades)
 	for evade_sequence in evades:
+		decoded = evade_sequence.encode().decode("unicode-escape")
+		if args.single_only and len(decoded) > 1:
+			continue
 		if not args.print:
 			print(evade_sequence)
 		else:
-			decoded = evade_sequence.encode().decode("unicode-escape")
 			spacing = " " * ((160 - len(evade_sequence)) - len(decoded))
 			print()
 			print("^" * 190)

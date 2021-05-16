@@ -11,6 +11,7 @@
 \u0e4a
 \u0e4b
 \u0e4c
+\u0e4d
 \u0e4e
 \u200f
 \u202c
