@@ -10,7 +10,7 @@ echo "Consider also setting the ServerAdmin contact in /etc/apache2/sites-availa
 read -p "Press enter when done..."; echo
 
 echo "Setting up static content..."
-sudo rmdir /var/www/html && sudo git clone https://github.com/incontestableness/milenko.ml /var/www/ && sudo chown -vR $USER /var/www/.git
+sudo rmdir /var/www/html && sudo git clone https://github.com/incontestableness/milenko.ml /var/www/ && sudo chown -vR $USER /var/www/.git /var/www/html
 
 echo -e "\nSetting up crontab for potato.py..."
 if crontab -l 2>/dev/null | grep -q potato\.py; then
