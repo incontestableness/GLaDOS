@@ -503,8 +503,11 @@ def botnames():
 @api.route("/check/<server>")
 @cache.cached(timeout=30)
 def user_checkServer(server):
-	bot_count, namestealers = core.checkServer(server)
-	return jsonify({"response": {"server": server, "bot_count": bot_count, "namestealers": namestealers}})
+	try:
+		bot_count, namestealers = core.checkServer(server)
+	except socket.timeout:
+		return jsonify({"response": {"success": False}})
+	return jsonify({"response": {"success": True, "server": server, "bot_count": bot_count, "namestealers": namestealers}})
 
 
 # TODO: Statistics events
