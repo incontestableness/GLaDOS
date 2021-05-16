@@ -319,7 +319,7 @@ class MoralityCore:
 						pass
 		if len(namestealers) > 0:
 			namesteal_debug(f"{len(namestealers)} namestealers: {namestealers}")
-		return namestealers
+		return list(namestealers)
 
 	# This function is called when a user or bot is assigned a match server
 	# In addition to checking regex patterns, it also looks for namestealers
