@@ -29,6 +29,7 @@ parser.add_argument("--server-debug", action="store_true")
 parser.add_argument("--timeout-debug", action="store_true")
 parser.add_argument("--name-debug", action="store_true")
 parser.add_argument("--namesteal-debug", action="store_true")
+parser.add_argument("--inject-debug", action="store_true", default=True)
 # You may wish to tune this based on your ping to the servers
 # cat *.tf_list | grep "[0-9.]*:" -o | sort -u | grep "[0-9.]*" -o | xargs -n 1 ping -c 1 -n -w 1 | grep time=
 parser.add_argument("--scan-timeout", type=float, default=0.500)
@@ -67,6 +68,11 @@ def name_debug(what):
 
 def namesteal_debug(what):
 	if args.namesteal_debug:
+		print(what)
+
+
+def inject_debug(what):
+	if args.inject_debug:
 		print(what)
 
 
@@ -306,7 +312,7 @@ class MoralityCore:
 					self.botnames = self.updatePName(self.bot_names, self.undupe(first_name))
 					self.botnames = self.updatePName(self.bot_names, self.undupe(first_name))
 				else:
-					namesteal_debug(f"{self.unevade(first_name)} and {self.unevade(m)} are char injecting")
+					inject_debug(f"{self.unevade(first_name)} and {self.unevade(m)} are char injecting")
 					namestealers.add(first_name)
 					namestealers.add(m)
 					try:
