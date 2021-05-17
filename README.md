@@ -33,22 +33,22 @@ After writing zeolite.py, Milenko found that an API endpoint Steam makes availab
 
 Simply run a local instance of [portalgun](https://github.com/incontestableness/portalgun) and your [hathook](https://github.com/incontestableness/hathook-public) installation should work as intended.
 
-**It is strongly recommended that you use the default central server as GLaDOS takes up considerable network bandwidth when scanning TF2 servers to target bot maps.**
+**It is strongly recommended that you use the default central server as GLaDOS takes up considerable network resources when scanning TF2 servers to target bot maps.**
 
-If you you want to contribute, check out todo.txt.
+If you want to contribute, check out todo.txt.
 
 
 ## Is the GLaDOS API publicly available?
 
 Yes! You can access the API at http://milenko.ml/api/something where "/something" is the relevant API call.
 
-All responses are returned in JSON format, unless an error is encountered. Most calls are limited to 10 or 20 requests per minute.
+All responses are returned in JSON format, unless an error is encountered. Most calls are cached for about 10 seconds.
 
 Here are the publicly available API calls:
 * [/popmaps/region](http://milenko.ml/api/popmaps/iad) - A list of the most popular maps for malicious bots. See regions.txt for available regions.
 * [/botnames](http://milenko.ml/api/botnames) - A list of potential bot names, based on multiple players using the same name.
-* [/namerules](http://milenko.ml/api/namerules) - An auto-updating [TF2BD](https://github.com/PazerOP/tf2_bot_detector)-compatible rules list for current bot names.
-* [/check/server](http://milenko.ml/api/check/208.78.165.231:27015) - The number of bots on the server and a list of likely namestealers.
+* [/namerules](http://milenko.ml/api/namerules) - An automatically generated [TF2BD](https://github.com/PazerOP/tf2_bot_detector)-compatible rules list for current bot names based on scanning Valve's TF2 servers for patterns in names.
+* [/check/server](http://milenko.ml/api/check/208.78.165.231:27015) - The number of bots on the server and a list of bot names that might not have been otherwise detected (namestealers and char-injected names).
 * [/stats](http://milenko.ml/api/stats) - Cumulative statistics, updated every minute.
 
 
