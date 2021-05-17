@@ -7,6 +7,7 @@
 \u0e39
 \u0e3a
 \u0e47
+\u0e48
 \u0e49
 \u0e4a
 \u0e4b
