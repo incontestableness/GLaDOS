@@ -173,12 +173,25 @@ class MoralityCore:
 
 	# Returns the first pattern that matches the name, if any
 	def check_name(self, name):
-		for pattern in self.patterns:
-			if pattern.fullmatch(name):
-				name_debug(f"Name \"{name}\" matched pattern: {pattern.pattern}")
-				return pattern
+		for name_pattern in self.patterns:
+			if name_pattern.fullmatch(name):
+				name_debug(f"Name \"{self.unevade(name)}\" matched pattern: {name_pattern.pattern}")
+				return name_pattern
+		# No match? Try removing evasion characters and then matching
+		for evade_pattern in self.evasion_sequences:
+			# Some evasion patterns contain ".*", in this case we need to recompile the pattern
+			if ".*" in evade_pattern.pattern:
+				evade_pattern = re.compile(evade_pattern.pattern.replace(".*", "|"))
+			# Strip the evasion characters
+			stripped_name = re.sub(evade_pattern, "", name)
+			# Now try matching
+			for name_pattern in self.patterns:
+				if name_pattern.fullmatch(stripped_name):
+					name_debug(f"Stripped name \"{stripped_name}\" matched pattern: {name_pattern.pattern}")
+					# TODO: Create a rule for this variant of the name?
+					return name_pattern
 		if self.dupematch.match(name):
-			print(f"Name \"{name}\" matched dupe pattern!")
+			print(f"Name \"{self.unevade(name)}\" matched dupe pattern! New bot name or evade char?")
 			return self.dupematch
 		return None
 
