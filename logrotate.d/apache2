@@ -9,7 +9,7 @@
 	sharedscripts
 	postrotate
                 if invoke-rc.d apache2 status > /dev/null 2>&1; then \
-			wget --quiet --bind-address 127.0.0.1 -O /dev/null milenko.ml/api/restart >/dev/null; \
+			wget --quiet --bind-address 127.0.0.1 -O /dev/null https://milenko.ml/api/restart >/dev/null; \
 			invoke-rc.d apache2 reload > /dev/null 2>&1; \
                 fi;
 	endscript

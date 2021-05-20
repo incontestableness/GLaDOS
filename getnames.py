@@ -29,7 +29,7 @@ if args.check:
 
 
 botnames = []
-response = requests.get("http://milenko.ml/api/botnames", headers={"User-Agent": "getnames.py/1.0 (https://github.com/incontestableness/GLaDOS)"})
+response = requests.get("https://milenko.ml/api/botnames", headers={"User-Agent": "getnames.py/1.0 (https://github.com/incontestableness/GLaDOS)"})
 for i in response.json()["response"]["bot_names"]:
 	botnames.append([i["name"], i["properties"]["times_seen"], i["properties"]["last_seen"] == "0 minutes ago"])
 

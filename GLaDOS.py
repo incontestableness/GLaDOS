@@ -642,7 +642,7 @@ def namerules():
 		"authors": ["Sydney", "The Great Milenko"],
 		"title": "Vibe check",
 		"description": "GLaDOS automatic bot name detection rules list",
-		"update_url": "http://milenko.ml/api/namerules"
+		"update_url": "https://milenko.ml/api/namerules"
 	}
 	rules = []
 	for pn in bnames:

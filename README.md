@@ -40,16 +40,16 @@ If you want to contribute, check out todo.txt.
 
 ## Is the GLaDOS API publicly available?
 
-Yes! You can access the API at http://milenko.ml/api/something where "/something" is the relevant API call.
+Yes! You can access the API at https://milenko.ml/api/something where "/something" is the relevant API call.
 
 All responses are returned in JSON format, unless an error is encountered. Most calls are cached for about 10 seconds.
 
 Here are the publicly available API calls:
-* [/popmaps/region](http://milenko.ml/api/popmaps/iad) - A list of the most popular maps for malicious bots. See regions.txt for available regions.
-* [/botnames](http://milenko.ml/api/botnames) - A list of potential bot names, based on multiple players using the same name.
-* [/namerules](http://milenko.ml/api/namerules) - An automatically generated [TF2BD](https://github.com/PazerOP/tf2_bot_detector)-compatible rules list for current bot names based on scanning Valve's TF2 servers for patterns in names.
-* [/check/server](http://milenko.ml/api/check/208.78.165.231:27015) - The number of bots on the server and a list of bot names that might not have been otherwise detected (namestealers and char-injected names).
-* [/stats](http://milenko.ml/api/stats) - Cumulative statistics, updated every minute.
+* [/popmaps/region](https://milenko.ml/api/popmaps/iad) - A list of the most popular maps for malicious bots. See regions.txt for available regions.
+* [/botnames](https://milenko.ml/api/botnames) - A list of potential bot names, based on multiple players using the same name.
+* [/namerules](https://milenko.ml/api/namerules) - An automatically generated [TF2BD](https://github.com/PazerOP/tf2_bot_detector)-compatible rules list for current bot names based on scanning Valve's TF2 servers for patterns in names.
+* [/check/server](https://milenko.ml/api/check/208.78.165.231:27015) - The number of bots on the server and a list of bot names that might not have been otherwise detected (namestealers and char-injected names).
+* [/stats](https://milenko.ml/api/stats) - Cumulative statistics, updated every minute.
 
 
 ## Why did you do this?
@@ -57,7 +57,7 @@ Here are the publicly available API calls:
 1. In order to enable hosting anti-bots in multiple regions while still gathering aggregated statistics easily
 2. Much more efficient targeting of matches with malicious bots
 3. Provide for a better [hathook](https://github.com/incontestableness/hathook-public) user experience
-4. Create an API that enables displaying statistics on [the website](http://milenko.ml/)
+4. Create an API that enables displaying statistics on [the website](https://milenko.ml/)
 5. Science is fun
 
 
