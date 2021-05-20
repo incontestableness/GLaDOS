@@ -27,13 +27,16 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--scanner-debug", action="store_true")
 parser.add_argument("--server-debug", action="store_true")
 parser.add_argument("--timeout-debug", action="store_true")
-parser.add_argument("--name-debug", action="store_true")
+parser.add_argument("--match-debug", action="store_true")
+parser.add_argument("--name-debug", action="store_true", default=True)
 parser.add_argument("--namesteal-debug", action="store_true")
-parser.add_argument("--inject-debug", action="store_true", default=True)
+parser.add_argument("--inject-debug", action="store_true")
 # You may wish to tune this based on your ping to the servers
 # cat *.tf_list | grep "[0-9.]*:" -o | sort -u | grep "[0-9.]*" -o | xargs -n 1 ping -c 1 -n -w 1 | grep time=
 parser.add_argument("--scan-timeout", type=float, default=0.500)
 parser.add_argument("--workers", type=int, default=1024)
+parser.add_argument("--suspicious-times-seen", type=int, default=360)
+parser.add_argument("--cheater-times-seen", type=int, default=1000)
 args = parser.parse_args()
 
 
@@ -58,6 +61,11 @@ def server_debug(what):
 
 def timeout_debug(what):
 	if args.timeout_debug:
+		print(what)
+
+
+def match_debug(what):
+	if args.match_debug:
 		print(what)
 
 
@@ -133,8 +141,8 @@ class MoralityCore:
 
 		self.dupematch = re.compile("^(\([1-9]\d?\))")
 
-		# Make a list of bot names publicly available for TF2BD rules list creators to use
-		self.bot_names = set()
+		# Keeps track of potential bot names
+		self.bot_names = {}
 
 		self.region_map_trackers = []
 
@@ -149,66 +157,115 @@ class MoralityCore:
 				print(f"Failed to load pickled data for self.{vname}")
 
 	def load_blacklists(self):
-		self.patterns = []
-		self.evasion_sequences = []
+		patterns = []
+		evasion_sequences = []
+		evasion_sequences_OR_mode = []
 		with open("name_blacklist.txt", "r") as bl:
 			data = bl.read()
-			name_blacklist = data.split("\n")[:-1]
-			for pattern in name_blacklist:
+			# Store this so blacklist_name() can check and prevent duplicates
+			self.name_blacklist = data.split("\n")[:-1]
+			for pattern in self.name_blacklist:
+				# Ignore empty lines
+				if pattern == "":
+					continue
 				# Trust me, this entire line is necessary
 				pattern = pattern.encode().decode("unicode-escape").encode("UTF-8").decode()
 				# Add the prefix
 				pattern = "^(\([1-9]\d?\))?" + pattern
 				# https://docs.python.org/3/library/re.html#re.ASCII
 				compiled = re.compile(pattern, flags=re.ASCII)
-				self.patterns.append(compiled)
+				patterns.append(compiled)
+		self.patterns = patterns
 		print("Name pattern blacklist loaded!")
 		with open("evade_blacklist.txt", "r") as bl:
 			data = bl.read()
 			evade_blacklist = data.split("\n")[:-1]
 			for pattern in evade_blacklist:
 				compiled = re.compile(pattern)
-				self.evasion_sequences.append(compiled)
+				evasion_sequences.append(compiled)
+		self.evasion_sequences = evasion_sequences
+		# Some evasion patterns contain ".*"; we need to recompile these patterns to make stripping names possible
+		for evade_pattern in self.evasion_sequences:
+			evade_pattern_OR_mode = re.compile(evade_pattern.pattern.replace(".*", "|"))
+			evasion_sequences_OR_mode.append(evade_pattern_OR_mode)
+		self.evasion_sequences_OR_mode = evasion_sequences_OR_mode
 		print("Evasion sequences loaded!")
+
+	# Formats the given name and adds it to names_blacklist.txt, then reloads patterns from the file
+	# This will persist changes in a human readable/writable format
+	def blacklist_name(self, name):
+		name = re.escape(name)
+		if name in self.name_blacklist:
+			print(f"Not adding duplicate name {name}!")
+			return
+		file = open("name_blacklist.txt", "a")
+		file.write(f"{name}\n")
+		file.close()
+		self.load_blacklists()
 
 	# Returns the first pattern that matches the name, if any
 	def check_name(self, name):
+		# We've been given some name to check.
+		# If GLaDOS knows about this name but it's not blacklisted yet, do so when confident.
+		# First, try to match the name against existing patterns
 		for name_pattern in self.patterns:
 			if name_pattern.fullmatch(name):
-				name_debug(f"Name \"{self.unevade(name)}\" matched pattern: {name_pattern.pattern}")
+				match_debug(f"Name \"{self.unevade(name)}\" matched pattern: {self.unevade(name_pattern.pattern)}")
 				return name_pattern
 		# No match? Try removing evasion characters and then matching
-		for evade_pattern in self.evasion_sequences:
-			# Some evasion patterns contain ".*", in this case we need to recompile the pattern
-			if ".*" in evade_pattern.pattern:
-				evade_pattern = re.compile(evade_pattern.pattern.replace(".*", "|"))
-			# Strip the evasion characters
-			stripped_name = re.sub(evade_pattern, "", name)
-			# Now try matching
-			for name_pattern in self.patterns:
-				if name_pattern.fullmatch(stripped_name):
-					name_debug(f"Stripped name \"{stripped_name}\" matched pattern: {name_pattern.pattern}")
-					# TODO: Create a rule for this variant of the name?
-					return name_pattern
+		stripped = name
+		for evade_pattern_OR_mode in self.evasion_sequences_OR_mode:
+			# Strip each evasion character
+			stripped = re.sub(evade_pattern_OR_mode, "", stripped)
+		# Now try matching
+		for name_pattern in self.patterns:
+			if name_pattern.fullmatch(stripped):
+				match_debug(f"Stripped name \"{stripped}\" matched pattern: {self.unevade(name_pattern.pattern)}")
+				# TODO: Create a rule for this variant of the name?
+				return name_pattern
+		# We didn't match against existing patterns, even when the name is stripped
+		# If the name starts with (N), warn about it
 		if self.dupematch.match(name):
-			print(f"Name \"{self.unevade(name)}\" matched dupe pattern! New bot name or evade char?")
+			match_debug(f"Name \"{self.unevade(name)}\" matched dupe pattern! New bot name or evade char?")
 			return self.dupematch
-		return None
+		# Check this name's times_seen
+		# If this is a highly recurrent name, blacklist it
+		# blacklist_name() checks for a duplicate before adding which makes this thread-safe
+		pn = self.bot_names.get(name)
+		if pn is not None:
+			if pn.times_seen >= args.suspicious_times_seen:
+				name_debug(f"Saw a recurring name ({self.unevade(name)}) not yet blacklisted. Times seen: {pn.times_seen}")
+				if pn.times_seen >= args.cheater_times_seen:
+					name_debug(f"The aforementioned name will now be blacklisted.")
+					self.blacklist_name(name)
+					return None
+		else:
+			stripped = self.strip_name(name)
+			if len(stripped) == 0 or stripped.replace(" ", "") == "":
+				return None
+			pn = self.bot_names.get(stripped)
+			if pn is None:
+				return None
+			if pn.times_seen >= args.suspicious_times_seen:
+				name_debug(f"This name ({self.unevade(name)}), when STRIPPED,  matches a previously seen name ({self.unevade(pn.name)}). Times seen: {pn.times_seen}")
+				if pn.times_seen >= args.cheater_times_seen:
+					name_debug(f"The aforementioned name will now be blacklisted in stripped form.")
+					self.blacklist_name(stripped)
+					return None
 
 	# Removes the leading (N) from names
 	def undupe(self, name):
 		return re.sub(self.dupematch, "", name)
 
 	# Helper function to update or create the PName for the given bot name and return an updated list
-	def updatePName(self, bot_names, name):
-		for i in bot_names:
+	def updatePName(self, name):
+		for i in self.bot_names.values():
 			if i.name == name:
 				i.increment()
-				return bot_names
+				return
 		# PName doesn't exist yet, create it and append to the list
 		pn = PName(name)
-		bot_names.add(pn)
-		return bot_names
+		self.bot_names[name] = pn
 
 	# Same concept here but with TFMaps
 	def updateMap(self, popular_bot_maps, name, bot_count, server_seen_on):
@@ -250,7 +307,7 @@ class MoralityCore:
 					# This can run multiple times, increasing map "score" by bot count, unless we break out of the loop.
 					# Currently we allow it to do so.
 					bot_count += 1
-					self.bot_names = self.updatePName(self.bot_names, self.undupe(p.name))
+					self.updatePName(self.undupe(p.name))
 			bot_count += len(self.getNamestealers(players))
 			return server_info.map_name, total_players, bot_count, server_str
 		except socket.timeout:
@@ -290,15 +347,13 @@ class MoralityCore:
 			# Don't check first_name against itself
 			to_check = to_check[1:]
 			fs = self.strip_name(first_name)
-			# If the name is empty after stripping non-ascii characters, skip it
-			is_all_spaces = fs.replace(" ", "") == ""
-			if len(fs) == 0 or is_all_spaces:
+			# If the name is practically empty after stripping non-ascii characters, skip it
+			if len(fs) == 0 or fs.replace(" ", "") == "":
 				continue
 			matches = []
 			for second_name in to_check:
 				ss = self.strip_name(second_name)
-				is_all_spaces = ss.replace(" ", "") == ""
-				if len(ss) == 0 or is_all_spaces:
+				if len(ss) == 0 or ss.replace(" ", "") == "":
 					continue
 				if fs == ss:
 					matches.append(second_name)
@@ -322,12 +377,14 @@ class MoralityCore:
 					print(f"First name: {self.unevade(first_name)}")
 					print(f"Second name: {self.unevade(m)}")
 					# Throw these in so getnames.py can deal with it
-					self.botnames = self.updatePName(self.bot_names, self.undupe(first_name))
-					self.botnames = self.updatePName(self.bot_names, self.undupe(first_name))
+					self.updatePName(self.undupe(first_name))
+					self.updatePName(self.undupe(m))
 				else:
 					inject_debug(f"{self.unevade(first_name)} and {self.unevade(m)} are char injecting")
 					namestealers.add(first_name)
 					namestealers.add(m)
+					self.updatePName(self.strip_name(first_name))
+					self.updatePName(self.strip_name(m))
 					try:
 						to_check.remove(first_name)
 					except:
@@ -337,7 +394,10 @@ class MoralityCore:
 					except:
 						pass
 		if len(namestealers) > 0:
-			namesteal_debug(f"{len(namestealers)} namestealers: {namestealers}")
+			unevaded = []
+			for i in namestealers:
+				unevaded.append(self.unevade(i))
+			namesteal_debug(f"{len(namestealers)} namestealers: {unevaded}")
 		return list(namestealers)
 
 	# This function is called when a user or bot is assigned a match server
@@ -409,7 +469,7 @@ class MoralityCore:
 			# Give new, completed data to the API by updating the class object-scoped variable
 			self.region_map_trackers = self.scan_servers()
 			elapsed = round(time.time() - start, 2)
-			print(f"Scans complete (took {elapsed} secs)...")
+			print(f"Scans complete (took {elapsed} secs)...\n")
 			# Reload lists hourly
 			if time.time() - self.last_tfl_load > 60 * 60:
 				self.loadTFLs()
@@ -497,7 +557,7 @@ def popmaps(desired_region):
 def botnames():
 	bot_names = []
 	now = time.time()
-	for pn in sorted(core.bot_names, reverse=True):
+	for pn in sorted(core.bot_names.values(), reverse=True):
 		# Ignore names older than 24h
 		if now - pn.last_seen >= 60 * 60 * 24:
 			continue
@@ -566,16 +626,16 @@ def stats():
 def namerules():
 	bnames = []
 	snames = []
-	for pn in sorted(core.bot_names, reverse=True):
+	for pn in sorted(core.bot_names.values(), reverse=True):
 		# Ignore names older than 24h
 		if time.time() - pn.last_seen >= 60 * 60 * 24:
 			continue
 		# Scans run every 10 seconds. This is taken into account.
 		# Very high confidence. At a minimum, a single user with a name starting with (N) over the full course of almost 3 hours.
-		if pn.times_seen >= 1000:
+		if pn.times_seen >= args.cheater_times_seen:
 			bnames.append(pn)
 		# Reasonably confident. At a minimum, a single user with a name starting with (N) over the full course of an hour.
-		elif pn.times_seen >= 360:
+		elif pn.times_seen >= args.suspicious_times_seen:
 			snames.append(pn)
 	data = {"$schema": "https://raw.githubusercontent.com/PazerOP/tf2_bot_detector/master/schemas/v3/rules.schema.json"}
 	data["file_info"] = {
