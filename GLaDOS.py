@@ -234,6 +234,9 @@ class MoralityCore:
 		pn = self.bot_names.get(name)
 		if pn is not None:
 			if pn.times_seen >= args.suspicious_times_seen:
+				# This name wasn't caught by the dupematch but it's suspicious and we're still seeing it.
+				# Since it won't be incremented as a result of matching the dupematch we have to do it ourselves here.
+				pn.increment()
 				name_debug(f"Saw a recurring name ({self.unevade(name)}) not yet blacklisted. Times seen: {pn.times_seen}")
 				if pn.times_seen >= args.cheater_times_seen:
 					name_debug(f"The aforementioned name will now be blacklisted.")
