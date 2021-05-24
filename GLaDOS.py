@@ -15,6 +15,7 @@ import socket
 from string import ascii_letters, digits, punctuation
 import threading
 import time
+import traceback
 
 
 
@@ -263,13 +264,17 @@ class MoralityCore:
 
 	# Helper function to update or create the PName for the given bot name and return an updated list
 	def updatePName(self, name):
-		for i in self.bot_names.values():
-			if i.name == name:
-				i.increment()
-				return
-		# PName doesn't exist yet, create it and append to the list
-		pn = PName(name)
-		self.bot_names[name] = pn
+		# We can ignore this particular case of bot_names changing size and just not increment the name
+		try:
+			for i in self.bot_names.values():
+				if i.name == name:
+					i.increment()
+					return
+			# PName doesn't exist yet, create it and append to the list
+			pn = PName(name)
+			self.bot_names[name] = pn
+		except RuntimeError as ex:
+			traceback.print_tb(ex.__traceback__)
 
 	# Same concept here but with TFMaps
 	def updateMap(self, popular_bot_maps, name, bot_count, server_seen_on):
