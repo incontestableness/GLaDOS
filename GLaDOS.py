@@ -194,6 +194,7 @@ class MoralityCore:
 	# Formats the given name and adds it to names_blacklist.txt, then reloads patterns from the file
 	# This will persist changes in a human readable/writable format
 	def blacklist_name(self, name):
+		name = name.encode("unicode-escape").decode()
 		name = re.escape(name)
 		if name in self.name_blacklist:
 			print(f"Not adding duplicate name {name}!")
