@@ -274,7 +274,7 @@ class MoralityCore:
 			pn = PName(name)
 			self.bot_names[name] = pn
 		except RuntimeError as ex:
-			traceback.print_tb(ex.__traceback__)
+			traceback.print_exception(ex.__traceback__)
 
 	# Same concept here but with TFMaps
 	def updateMap(self, popular_bot_maps, name, bot_count, server_seen_on):
