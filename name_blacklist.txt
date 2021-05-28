@@ -1,6 +1,6 @@
 braaaap \d+
 CAN YOU QUACK
-\[VALVE\] N(i|\xe2\x85\x88|\u2148)?g?gerkiller
+\[VALVE\] ?N(i|\xe2\x85\x88|\u2148)?g?gerkiller
 wallyLMAO223
 ELDER GOD WAMO
 OMEGATRONIC
