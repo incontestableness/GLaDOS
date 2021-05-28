@@ -1,6 +1,6 @@
 braaaap \d+
 CAN YOU QUACK
-\[VALVE\] N(\xe2\x85\x88|\u2148)?ggerkiller
+\[VALVE\] N(i|\xe2\x85\x88|\u2148)?g?gerkiller
 wallyLMAO223
 ELDER GOD WAMO
 OMEGATRONIC
@@ -44,7 +44,9 @@ INNER\ CIRCLE\ GAMING
 Friendly\ Medical\ Services\u0e31?
 a
 George\ de\ Lugano
-Verify\ me\ www\.botpolice\.?c?f?
+Verify\ me\ www\.botpolice\.?(c|e)?(f|u)?
 MLP_LOVER1337
 fella\ in\ france
 DR3AM
+someones\ antibot
+ZhainLIVE
