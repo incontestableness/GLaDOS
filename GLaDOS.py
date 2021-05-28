@@ -13,6 +13,7 @@ import pickle
 import re
 import socket
 from string import ascii_letters, digits, punctuation
+import sys
 import threading
 import time
 import traceback
@@ -273,8 +274,8 @@ class MoralityCore:
 			# PName doesn't exist yet, create it and append to the list
 			pn = PName(name)
 			self.bot_names[name] = pn
-		except RuntimeError as ex:
-			traceback.print_exception(ex.__traceback__)
+		except RuntimeError:
+			traceback.print_exception(*sys.exc_info())
 
 	# Same concept here but with TFMaps
 	def updateMap(self, popular_bot_maps, name, bot_count, server_seen_on):
