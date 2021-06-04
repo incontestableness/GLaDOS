@@ -1,0 +1,87 @@
+{
+	"Region ID 0": {
+		"locations": [
+			"Virginia, United States": {
+				"datacenters": ["iad2"]
+			}
+		]},
+	"Region ID 1": {
+		"locations": [
+			"Washington, United States": {
+				"datacenters": ["tuk2"]
+			},
+			"Los Angeles, California, United States": {
+				"datacenters": ["lax2"]
+			}
+		]},
+	"Region ID 2": {
+		"locations": [
+			"Peru": {
+				"datacenters": ["lim1"]
+			},
+			"Brazil": {
+				"datacenters": ["gru-1"]
+			},
+			"Chile": {
+				"datacenters": ["scl-1"]
+			}
+		]},
+	"Region ID 3": {
+		"locations": [
+			"Frankfurt, Germany": {
+				"datacenters": ["fra2"]
+			},
+			"Madrid, Spain": {
+				"datacenters": ["mad-1"]
+			},
+			"Stockholm, Sweden": {
+				"comment": "Why are you like this?",
+				"datacenters": [
+					"sto-1",
+					"sto-2",
+					"sto-3",
+					"sto-4",
+					"sto-5",
+					"sto-6",
+					"sto-7"
+				]
+			}
+		]},
+	"Region ID 4": {
+		"locations": [
+			"Chennai, Tamil Nadu, India": {
+				"datacenters": ["maa-1"]
+			},
+			"Mumbai, Maharashtra, India": {
+				"datacenters": ["bom-1"]
+			},
+			"Singapore": {
+				"datacenters": ["sgp2"]
+			},
+			"Hong Kong, China": {
+				"datacenters": ["hkg1"]
+			},
+			"Tokyo, Japan":
+				"datacenters": ["tyo-1", "tyo-2"]
+			}
+		]},
+	"Region ID 5": {
+		"locations": [
+			"Sydney, New South Wales, Australia": {
+				"datacenters": ["syd-1", "syd-2"]
+				}
+			]},
+	"Region ID 6": {
+		"locations": [
+			"Dubai, Emirate of Dubai, United Arab Emirates": {
+				"datacenters": ["dxb-1"]
+				}
+			]},
+	"Region ID 7": {
+		"locations": [
+			"Johannesburg, Gauteng, South Africa": {
+				"datacenters": ["jnb-1", "jnb-2"]
+				}
+			]
+	}
+}
