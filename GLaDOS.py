@@ -506,7 +506,7 @@ def restart():
 def popmaps(desired_region):
 	targeted = []
 	for tracker in core.region_map_trackers:
-		if tracker["region_id"] != desired_region:
+		if str(tracker["region_id"]) != desired_region:
 			continue
 		for i in tracker["popular_bot_maps"]:
 			targeted.append(i.name)
