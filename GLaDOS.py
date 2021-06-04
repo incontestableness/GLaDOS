@@ -451,7 +451,7 @@ api = Flask(__name__)
 config = {
 	"JSON_SORT_KEYS": False,
 	"CACHE_TYPE": "SimpleCache", # Flask-Caching
-	"CACHE_DEFAULT_TIMEOUT": 10
+	"CACHE_DEFAULT_TIMEOUT": 5
 }
 api.config.from_mapping(config)
 cache = Cache(api)
