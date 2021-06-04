@@ -39,8 +39,8 @@ parser.add_argument("--inject-debug", action="store_true")
 # cat *.tf_list | grep "[0-9.]*:" -o | sort -u | grep "[0-9.]*" -o | xargs -n 1 ping -c 1 -n -w 1 | grep time=
 parser.add_argument("--scan-timeout", type=float, default=0.500)
 parser.add_argument("--workers", type=int, default=1024)
-parser.add_argument("--suspicious-times-seen", type=int, default=360)
-parser.add_argument("--cheater-times-seen", type=int, default=1000)
+parser.add_argument("--suspicious-times-seen", type=int, default=720)
+parser.add_argument("--cheater-times-seen", type=int, default=2160)
 args = parser.parse_args()
 
 
@@ -594,11 +594,11 @@ def namerules():
 		# Ignore names older than 24h
 		if time.time() - pn.last_seen >= 60 * 60 * 24:
 			continue
-		# Scans run every 10 seconds. This is taken into account.
-		# Very high confidence. At a minimum, a single user with a name starting with (N) over the full course of almost 3 hours.
+		# Scans run about every 5 seconds. This is taken into account.
+		# Very high confidence. For a false positive, a single user with a name starting with (N) would have to be in-game for the full course of 3 hours.
 		if pn.times_seen >= args.cheater_times_seen:
 			bnames.append(pn)
-		# Reasonably confident. At a minimum, a single user with a name starting with (N) over the full course of an hour.
+		# Reasonably confident. For a false positive, a single user with a name starting with (N) would have to be in-game for the full course of an hour.
 		elif pn.times_seen >= args.suspicious_times_seen:
 			snames.append(pn)
 	data = {"$schema": "https://raw.githubusercontent.com/PazerOP/tf2_bot_detector/master/schemas/v3/rules.schema.json"}
