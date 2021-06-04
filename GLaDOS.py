@@ -8,9 +8,11 @@ from flask_caching import Cache
 import json
 import logging
 from logging.handlers import RotatingFileHandler
+from object_classes import TFMap, PName, Server
 import os
 import pickle
 import re
+import requests
 import socket
 from string import ascii_letters, digits, punctuation
 import sys
@@ -40,6 +42,11 @@ parser.add_argument("--workers", type=int, default=1024)
 parser.add_argument("--suspicious-times-seen", type=int, default=360)
 parser.add_argument("--cheater-times-seen", type=int, default=1000)
 args = parser.parse_args()
+
+
+file = open("api-key.txt", "r")
+api_key = file.read().strip()
+file.close()
 
 
 logging.basicConfig(
@@ -86,48 +93,11 @@ def inject_debug(what):
 		print(what)
 
 
-# Represents a map and the number of malicious bots that have been seen on it in the last scan
-# Also keeps a list of the servers bots were seen on
-class TFMap:
-	def __init__(self, name, bot_count, first_server):
-		self.name = name
-		self.bot_count = bot_count
-		self.servers = {first_server}
-
-	def __lt__(self, other):
-		return self.bot_count < other.bot_count
-
-	def __repr__(self):
-		return f"{self.name}: {self.bot_count} bots across {len(self.servers)} servers: {self.servers}"
-
-
-# Track common dupnames that are likely bot names
-class PName:
-	def __init__(self, name):
-		self.name = name
-		self.times_seen = 1
-		self.first_seen = time.time()
-		self.last_seen = self.first_seen
-
-	def __lt__(self, other):
-		return self.times_seen < other.times_seen
-
-	def increment(self):
-		now = time.time()
-		# If we're seeing this bot again but it's been over 24h, reset the counter
-		if now - self.first_seen >= 60 * 60 * 24:
-			self.times_seen = 0
-			self.first_seen = now
-		self.times_seen += 1
-		self.last_seen = now
-
-
 # Handles active server scanning
 class MoralityCore:
 	def __init__(self):
 		# We need to load these the first time
 		self.load_blacklists()
-		self.loadTFLs()
 
 		# Stops scanning when set to True
 		self.halt = False
@@ -275,7 +245,7 @@ class MoralityCore:
 			pn = PName(name)
 			self.bot_names[name] = pn
 		except RuntimeError:
-			traceback.print_exception(*sys.exc_info())
+			print(traceback.format_exc())
 
 	# Same concept here but with TFMaps
 	def updateMap(self, popular_bot_maps, name, bot_count, server_seen_on):
@@ -291,21 +261,10 @@ class MoralityCore:
 		return popular_bot_maps
 
 	# Scan a server and return information about it for map targeting
-	def scanServer(self, server_str):
+	def scanServer(self, server_str, map_name):
 		ip, port = server_str.split(":")
 		server = (ip, int(port))
 		try:
-			server_info = a2s.info(server, timeout=args.scan_timeout)
-			if server_info.max_players == 6:
-				server_debug(f"Ignoring MVM server: {server_info.map_name} \t// {server_info.keywords}")
-				return None, None, None, None
-			elif server_info.max_players == 12:
-				server_debug(f"Ignoring competitive server: {server_info.map_name} \t// {server_info.keywords}")
-				return None, None, None, None
-			elif server_info.player_count == 0:
-				server_debug(f"Ignoring empty casual server: {server_info.map_name} \t// {server_info.keywords}")
-				return None, None, None, None
-
 			players = a2s.players(server, timeout=args.scan_timeout)
 			total_players = 0
 			bot_count = 0
@@ -319,7 +278,7 @@ class MoralityCore:
 					bot_count += 1
 					self.updatePName(self.undupe(p.name))
 			bot_count += len(self.getNamestealers(players))
-			return server_info.map_name, total_players, bot_count, server_str
+			return map_name, total_players, bot_count, server_str
 		except socket.timeout:
 			timeout_debug(f"Server {server_str} timed out after {args.scan_timeout} seconds...")
 			return None, None, None, None
@@ -423,37 +382,35 @@ class MoralityCore:
 		namestealers = self.getNamestealers(players)
 		return bot_count, namestealers
 
-	# Loads cached TF2 server lists into the core
-	def loadTFLs(self):
-		tfls = []
-		contents = os.listdir()
-		for filename in contents:
-			if filename.endswith(".tf_list"):
-				shortname = filename.split(".tf_list")[0]
-				tf_list = open(filename, "r")
-				data = tf_list.read()
-				tf_list.close()
-				server_list = data.split("\n")[:-1]
-				tfls.append({"shortname": shortname, "server_list": server_list})
-		self.tfls = tfls
-		self.last_tfl_load = time.time()
-		print("Loaded TF lists!")
-
-	# Purpose: Scan TF2 gameservers from cached lists to determine what maps malicious bots are currently on so that they can be targeted every time bots queue.
+	# Purpose: Scan TF2 gameservers to determine what maps malicious bots are currently on so that they can be targeted every time bots queue.
 	def scan_servers(self):
+		response = requests.get(f"https://api.steampowered.com/IGameServersService/GetServerList/v1/?key={api_key}&filter=appid\\440\\white\\1&limit=5000")
+		all_servers = response.json()["response"]["servers"]
+		servers_by_region = {}
+		for server in all_servers:
+			# Wrong lever!
+			if "mvm" in server["gametype"].split(","):
+				continue
+			if server["players"] == 0:
+				continue
+			region_servers = []
+			try:
+				region_servers = servers_by_region[server["region"]]
+			except KeyError:
+				pass
+			region_servers.append(Server(server["addr"], server["map"]))
+			servers_by_region[server["region"]] = region_servers
 		region_map_trackers = []
-		for region in self.tfls:
-			shortname = region["shortname"]
-			server_list = region["server_list"]
-			scanner_debug(f"Scanning {shortname}...")
+		for region_id in servers_by_region:
+			server_list = servers_by_region[region_id]
 			popular_bot_maps = []
 			casual_total = 0
 			bot_total = 0
-			# Multithreading badassness. We can scan all the active TF2 dedicated servers in 10 seconds flat.
+			# Multithreading badassness. We can scan all the active TF2 dedicated servers in under 5 seconds.
 			executor = concurrent.futures.ThreadPoolExecutor(max_workers=args.workers)
 			future_objs = []
-			for server_str in server_list:
-				future_obj = executor.submit(self.scanServer, server_str)
+			for sv in server_list:
+				future_obj = executor.submit(self.scanServer, sv.server_str, sv.map_name)
 				future_objs.append(future_obj)
 			for future_obj in concurrent.futures.as_completed(future_objs):
 				map_name, total_players, bot_count, server_str = future_obj.result()
@@ -464,10 +421,10 @@ class MoralityCore:
 				casual_total += total_players
 				bot_total += bot_count
 			popular_bot_maps.sort(reverse=True)
-			scanner_debug(f"Sorted popular_bot_maps for {shortname}: {popular_bot_maps}")
-			scanner_debug(f"Total players seen in {shortname}: {casual_total}")
-			scanner_debug(f"Total bots seen in {shortname}: {bot_total}")
-			tracker = {"shortname": shortname, "popular_bot_maps": popular_bot_maps, "casual_in_game": casual_total, "malicious_in_game": bot_total}
+			scanner_debug(f"Sorted popular_bot_maps for region {region_id}: {popular_bot_maps}")
+			scanner_debug(f"Total players seen in region {region_id}: {casual_total}")
+			scanner_debug(f"Total bots seen in region {region_id}: {bot_total}")
+			tracker = {"region_id": region_id, "popular_bot_maps": popular_bot_maps, "casual_in_game": casual_total, "malicious_in_game": bot_total}
 			region_map_trackers.append(tracker)
 		return region_map_trackers
 
@@ -480,9 +437,6 @@ class MoralityCore:
 			self.region_map_trackers = self.scan_servers()
 			elapsed = round(time.time() - start, 2)
 			print(f"Scans complete (took {elapsed} secs)...\n")
-			# Reload lists hourly
-			if time.time() - self.last_tfl_load > 60 * 60:
-				self.loadTFLs()
 			if self.halt:
 				self.halted = True
 				break
@@ -551,10 +505,10 @@ def restart():
 @cache.cached(forced_update=whitelisted)
 def popmaps(desired_region):
 	targeted = []
-	for region in core.region_map_trackers:
-		if region["shortname"] != desired_region:
+	for tracker in core.region_map_trackers:
+		if tracker["region_id"] != desired_region:
 			continue
-		for i in region["popular_bot_maps"]:
+		for i in tracker["popular_bot_maps"]:
 			targeted.append(i.name)
 	return jsonify({"response": {"popular_bot_maps": targeted}})
 
@@ -615,11 +569,11 @@ def stats():
 	bot_total = 0
 	players_per_region = []
 	bots_per_region = []
-	for region in core.region_map_trackers:
-		casual_total += region["casual_in_game"]
-		bot_total += region["malicious_in_game"]
-		players_per_region.append({region["shortname"]: region["casual_in_game"]})
-		bots_per_region.append({region["shortname"]: region["malicious_in_game"]})
+	for tracker in core.region_map_trackers:
+		casual_total += tracker["casual_in_game"]
+		bot_total += tracker["malicious_in_game"]
+		players_per_region.append({tracker["region_id"]: tracker["casual_in_game"]})
+		bots_per_region.append({tracker["region_id"]: tracker["malicious_in_game"]})
 	return jsonify({"response": {
 			"casual_in_game": {
 				"totals": {"all_players": casual_total, "malicious_bots": bot_total},
