@@ -65,7 +65,7 @@
 			"Hong Kong, China": {
 				"datacenters": ["hkg1"]
 			},
-			"Tokyo, Japan":
+			"Tokyo, Japan": {
 				"datacenters": ["tyo-1", "tyo-2"]
 			}
 		}
