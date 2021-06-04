@@ -1,4 +1,9 @@
-# GLaDOS
+# GLaDOS - Legacy code
+
+## Warning: This branch uses old stuff; it is unmaintained.
+
+In particular, this version has poor host discovery. It does not cover all Valve casual servers. This could probably be fixed with data from get_32590_cidrs.sh and potato_cidrs in combination with a rewrite of potato.py and ketchupbottle.py, but using a different Steam API endpoint makes these utilities obsolete.
+
 
 ![Who are you?](https://i.imgur.com/0gbb1AH.png)
 
