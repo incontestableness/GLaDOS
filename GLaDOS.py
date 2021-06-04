@@ -27,6 +27,7 @@ if __name__ != "__main__":
 	os.chdir(os.path.expanduser("~/GLaDOS"))
 
 
+# Debugging options
 parser = argparse.ArgumentParser()
 parser.add_argument("--scanner-debug", action="store_true")
 parser.add_argument("--server-debug", action="store_true")
@@ -36,7 +37,6 @@ parser.add_argument("--name-debug", action="store_true", default=True)
 parser.add_argument("--namesteal-debug", action="store_true")
 parser.add_argument("--inject-debug", action="store_true")
 # You may wish to tune this based on your ping to the servers
-# cat *.tf_list | grep "[0-9.]*:" -o | sort -u | grep "[0-9.]*" -o | xargs -n 1 ping -c 1 -n -w 1 | grep time=
 parser.add_argument("--scan-timeout", type=float, default=0.500)
 parser.add_argument("--workers", type=int, default=1024)
 parser.add_argument("--suspicious-times-seen", type=int, default=720)
@@ -44,11 +44,15 @@ parser.add_argument("--cheater-times-seen", type=int, default=2160)
 args = parser.parse_args()
 
 
-file = open("api-key.txt", "r")
-api_key = file.read().strip()
-file.close()
+# API setup
+with open("api-key.txt") as file:
+	api_key = file.read().strip()
+
+session = requests.Session()
+session.headers.update({"user-agent": "GLaDOS.py/3.0 (https://github.com/incontestableness/GLaDOS)"})
 
 
+# Logging setup
 logging.basicConfig(
         handlers = [RotatingFileHandler("log.txt", maxBytes=1024 * 1024 * 20, backupCount=2)],
         level = logging.INFO,
@@ -111,11 +115,14 @@ class MoralityCore:
 		snoipin = threading.Thread(target=self.lucksman, args=(), daemon=True)
 		snoipin.start()
 
+		# No need to create these every time they're needed
 		self.dupematch = re.compile("^(\([1-9]\d?\))")
+		self.allowed_chars = ascii_letters + digits + punctuation + " "
 
 		# Keeps track of potential bot names
 		self.bot_names = {}
 
+		# API data
 		self.region_map_trackers = []
 
 		# Load saved data where possible
@@ -288,11 +295,10 @@ class MoralityCore:
 
 	# Returns an ASCII-only string
 	def strip_name(self, name):
-		allowed = ascii_letters + digits + punctuation + " "
-		return "".join(filter(lambda x: x in allowed, name))
+		return "".join(filter(lambda x: x in self.allowed_chars, name))
 
 	# Returns true if the name has evading character sequences in it
-	def evaded(self, name):
+	def is_evaded(self, name):
 		for seq in self.evasion_sequences:
 			match = seq.search(name)
 			if match is not None:
@@ -327,22 +333,22 @@ class MoralityCore:
 				if fs == ss:
 					matches.append(second_name)
 			for m in matches:
-				if self.evaded(m) and not self.evaded(first_name):
+				if self.is_evaded(m) and not self.is_evaded(first_name):
 					namesteal_debug(f"{self.unevade(m)} stole {self.unevade(first_name)}'s name!")
 					namestealers.add(m)
 					try:
 						to_check.remove(m)
 					except:
 						pass
-				elif self.evaded(first_name) and not self.evaded(m):
+				elif self.is_evaded(first_name) and not self.is_evaded(m):
 					namesteal_debug(f"{self.unevade(first_name)} stole {self.unevade(m)}'s name!")
 					namestealers.add(first_name)
 					try:
 						to_check.remove(first_name)
 					except:
 						pass
-				elif (not self.evaded(first_name)) and (not self.evaded(m)):
-					print("WARNING: evaded() didn't catch the injected chars!")
+				elif (not self.is_evaded(first_name)) and (not self.is_evaded(m)):
+					print("WARNING: is_evaded() didn't catch the injected chars!")
 					print(f"First name: {self.unevade(first_name)}")
 					print(f"Second name: {self.unevade(m)}")
 					# Throw these in so getnames.py can deal with it
@@ -384,8 +390,12 @@ class MoralityCore:
 
 	# Purpose: Scan TF2 gameservers to determine what maps malicious bots are currently on so that they can be targeted every time bots queue.
 	def scan_servers(self):
-		response = requests.get(f"https://api.steampowered.com/IGameServersService/GetServerList/v1/?key={api_key}&filter=appid\\440\\white\\1&limit=5000")
-		all_servers = response.json()["response"]["servers"]
+		all_servers = []
+		try:
+			response = session.get(f"https://api.steampowered.com/IGameServersService/GetServerList/v1/?key={api_key}&filter=appid\\440\\white\\1&limit=5000")
+			all_servers = response.json()["response"]["servers"]
+		except requests.exceptions.SSLError:
+			pass
 		servers_by_region = {}
 		for server in all_servers:
 			# Wrong lever!
