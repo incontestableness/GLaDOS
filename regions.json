@@ -1,5 +1,7 @@
 {
 	"Region ID 0": {
+		"simple_name": "East Coast US",
+		"comment": "Dallas TF2 servers when?",
 		"locations": {
 			"Virginia, United States": {
 				"datacenters": ["iad2"]
@@ -7,6 +9,7 @@
 		}
 	},
 	"Region ID 1": {
+		"simple_name": "West Coast US",
 		"locations": {
 			"Washington, United States": {
 				"datacenters": ["tuk2"]
@@ -17,6 +20,7 @@
 		}
 	},
 	"Region ID 2": {
+                "simple_name": "South America",
 		"locations": {
 			"Peru": {
 				"datacenters": ["lim1"]
@@ -30,6 +34,7 @@
 		}
 	},
 	"Region ID 3": {
+                "simple_name": "Europe",
 		"locations": {
 			"Frankfurt, Germany": {
 				"datacenters": ["fra2"]
@@ -52,6 +57,7 @@
 		}
 	},
 	"Region ID 4": {
+                "simple_name": "South Asia",
 		"locations": {
 			"Chennai, Tamil Nadu, India": {
 				"datacenters": ["maa-1"]
@@ -71,6 +77,7 @@
 		}
 	},
 	"Region ID 5": {
+                "simple_name": "Australia",
 		"locations": {
 			"Sydney, New South Wales, Australia": {
 				"datacenters": ["syd-1", "syd-2"]
@@ -78,6 +85,7 @@
 		}
 	},
 	"Region ID 6": {
+                "simple_name": "Western Asia",
 		"locations": {
 			"Dubai, Emirate of Dubai, United Arab Emirates": {
 				"datacenters": ["dxb-1"]
@@ -85,6 +93,7 @@
 		}
 	},
 	"Region ID 7": {
+                "simple_name": "South Africa",
 		"locations": {
 			"Johannesburg, Gauteng, South Africa": {
 				"datacenters": ["jnb-1", "jnb-2"]

@@ -97,6 +97,13 @@ def inject_debug(what):
 		print(what)
 
 
+# Read in regions.json for nicer stats output
+file = open("regions.json", "r")
+data = file.read()
+file.close()
+regions_data = json.loads(data)
+
+
 # Handles active server scanning
 class MoralityCore:
 	def __init__(self):
@@ -397,17 +404,15 @@ class MoralityCore:
 		except requests.exceptions.SSLError:
 			pass
 		servers_by_region = {}
+		for region_id in range(0, 7 + 1):
+			servers_by_region[region_id] = []
 		for server in all_servers:
 			# Wrong lever!
 			if "mvm" in server["gametype"].split(","):
 				continue
 			if server["players"] == 0:
 				continue
-			region_servers = []
-			try:
-				region_servers = servers_by_region[server["region"]]
-			except KeyError:
-				pass
+			region_servers = servers_by_region[server["region"]]
 			region_servers.append(Server(server["addr"], server["map"]))
 			servers_by_region[server["region"]] = region_servers
 		region_map_trackers = []
@@ -577,13 +582,14 @@ def exampleEventHandler(data):
 def stats():
 	casual_total = 0
 	bot_total = 0
-	players_per_region = []
-	bots_per_region = []
+	players_per_region = {}
+	bots_per_region = {}
 	for tracker in core.region_map_trackers:
+		region_simple_name = regions_data[f"Region ID {tracker['region_id']}"]["simple_name"]
 		casual_total += tracker["casual_in_game"]
 		bot_total += tracker["malicious_in_game"]
-		players_per_region.append({tracker["region_id"]: tracker["casual_in_game"]})
-		bots_per_region.append({tracker["region_id"]: tracker["malicious_in_game"]})
+		players_per_region[region_simple_name] = tracker["casual_in_game"]
+		bots_per_region[region_simple_name] = tracker["malicious_in_game"]
 	return jsonify({"response": {
 			"casual_in_game": {
 				"totals": {"all_players": casual_total, "malicious_bots": bot_total},
