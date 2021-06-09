@@ -107,8 +107,8 @@ regions_data = json.loads(data)
 # Handles active server scanning
 class MoralityCore:
 	def __init__(self):
-		# We need to load these the first time
-		self.load_blacklists()
+		# Init
+		self.last_save = time.time()
 
 		# Stops scanning when set to True
 		self.halt = False
@@ -116,21 +116,18 @@ class MoralityCore:
 		# Signals the restart endpoint that it's okay to proceed
 		self.halted = False
 
-		# Run server scans in another thread
-		# This thread just repopulates the class object's data on bot maps,
-		# so it's okay to terminate it with the main thread
-		snoipin = threading.Thread(target=self.lucksman, args=(), daemon=True)
-		snoipin.start()
+		# Keeps track of potential bot names
+		self.bot_names = {}
+
+		# Cached API data
+		self.region_map_trackers = []
 
 		# No need to create these every time they're needed
 		self.dupematch = re.compile("^(\([1-9]\d?\))")
 		self.allowed_chars = ascii_letters + digits + punctuation + " "
 
-		# Keeps track of potential bot names
-		self.bot_names = {}
-
-		# API data
-		self.region_map_trackers = []
+		# We need to load these the first time
+		self.load_blacklists()
 
 		# Load saved data where possible
 		for vname in ["bot_names", "region_map_trackers"]:
@@ -141,6 +138,18 @@ class MoralityCore:
 				print(f"Successfully loaded pickled data for self.{vname}")
 			except FileNotFoundError:
 				print(f"Failed to load pickled data for self.{vname}")
+
+		# Run server scans in another thread
+		# This thread just repopulates the class object's data on bot maps,
+		# so it's okay to terminate it with the main thread
+		snoipin = threading.Thread(target=self.lucksman, args=(), daemon=True)
+		snoipin.start()
+
+	def save_data():
+		for vname in ["bot_names", "region_map_trackers"]:
+			file = open(f"{vname}.pkl", "wb")
+			exec(f"pickle.dump(self.{vname}, file)")
+			file.close()
 
 	def load_blacklists(self):
 		patterns = []
@@ -457,6 +466,9 @@ class MoralityCore:
 			self.region_map_trackers = self.scan_servers()
 			elapsed = round(time.time() - start, 2)
 			print(f"Scans complete (took {elapsed} secs)...\n")
+			# Save data every 5 minutes
+			if time.time() - self.last_save > 60 * 5:
+				self.save_data()
 			if self.halt:
 				self.halted = True
 				break
@@ -512,10 +524,7 @@ def restart():
 	while not core.halted:
 		time.sleep(0.100)
 	# Save stuff
-	for vname in ["bot_names", "region_map_trackers"]:
-		file = open(f"{vname}.pkl", "wb")
-		exec(f"pickle.dump(core.{vname}, file)")
-		file.close()
+	core.save_data()
 	# Crash
 	os.abort()
 
