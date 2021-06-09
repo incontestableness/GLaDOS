@@ -26,9 +26,6 @@ from valve_whitelist import cidrs
 parser = argparse.ArgumentParser()
 # You may wish to tune this based on your ping to the servers
 parser.add_argument("--scan-timeout", type=float, default=0.500)
-# The number of servers to scan simultaneously
-# Be mindful of CPU impact
-parser.add_argument("--workers", type=int, default=1024)
 # Must align with scanning speed, see namerules() and MoralityCore.check_name()
 parser.add_argument("--suspicious-times-seen", type=int, default=720)
 parser.add_argument("--cheater-times-seen", type=int, default=2160)
@@ -53,7 +50,7 @@ regions_data = json.loads(data)
 
 
 # Create a GLaDOS core
-core = MoralityCore(args.scan_timeout, args.workers, args.suspicious_times_seen, args.cheater_times_seen)
+core = MoralityCore(args.scan_timeout, args.suspicious_times_seen, args.cheater_times_seen)
 
 
 # Declare our Flask instance and define all the API routes

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import asyncio
 import a2s
 import concurrent.futures
 from debug import *
@@ -41,10 +42,9 @@ class Timer:
 
 # Handles active server scanning
 class MoralityCore:
-	def __init__(self, scan_timeout, workers, suspicious_times_seen, cheater_times_seen):
+	def __init__(self, scan_timeout, suspicious_times_seen, cheater_times_seen):
 		# Init
 		self.scan_timeout = scan_timeout
-		self.workers = workers
 		self.suspicious_times_seen = suspicious_times_seen
 		self.cheater_times_seen = cheater_times_seen
 		self.last_save = time.time()
@@ -231,11 +231,11 @@ class MoralityCore:
 
 
 	# Scan a server and return information about it for map targeting
-	def scanServer(self, server_str, map_name):
+	async def scanServer(self, server_str, map_name):
 		ip, port = server_str.split(":")
 		server = (ip, int(port))
 		try:
-			players = a2s.players(server, timeout=self.scan_timeout)
+			players = await a2s.aplayers(server, timeout=self.scan_timeout)
 			total_players = 0
 			bot_count = 0
 			for p in players:
@@ -249,7 +249,10 @@ class MoralityCore:
 					self.incrementPName(self.undupe(p.name))
 			bot_count += len(self.getNamestealers(players))
 			return map_name, total_players, bot_count, server_str
-		except socket.timeout:
+		except ConnectionRefusedError:
+			print(f"Server {server_str} refused the connection...")
+			return None, None, None, None
+		except asyncio.TimeoutError:
 			timeout_debug(f"Server {server_str} timed out after {self.scan_timeout} seconds...")
 			return None, None, None, None
 		except a2s.exceptions.BrokenMessageError:
@@ -359,20 +362,20 @@ class MoralityCore:
 		return bot_count, namestealers
 
 
-	# Purpose: Scan TF2 gameservers to determine what maps malicious bots are currently on so that they can be targeted every time bots queue.
-	def scan_servers(self):
+	# Purpose: Fetch active TF2 servers from the Steam API and pre-process the data for asynchronous scanning.
+	def start_scan(self):
 		all_servers = []
-		with Timer("Fetched TF2 servers from Steam API"):
-			try:
+		try:
+			with Timer("Fetched TF2 servers from Steam API"):
 				response = session.get(f"https://api.steampowered.com/IGameServersService/GetServerList/v1/?key={api_key}&filter=appid\\440\\white\\1&limit=5000")
 				all_servers = response.json()["response"]["servers"]
-			except (requests.exceptions.ConnectionError, requests.exceptions.SSLError, json.decoder.JSONDecodeError) as ex:
-				print(traceback.format_exc())
-				if type(ex) == json.decoder.JSONDecodeError:
-					print(f"Failed to decode response content:\n{response.content}")
-				else:
-					print("Failed to contact the Steam API server.")
-				time.sleep(1)
+		except (requests.exceptions.ConnectionError, requests.exceptions.SSLError, json.decoder.JSONDecodeError) as ex:
+			print(traceback.format_exc())
+			if type(ex) == json.decoder.JSONDecodeError:
+				print(f"Failed to decode response content:\n{response.content}")
+			else:
+				print("Failed to contact the Steam API server.")
+			time.sleep(1)
 		servers_by_region = {}
 		for region_id in range(0, 7 + 1):
 			servers_by_region[region_id] = []
@@ -385,44 +388,59 @@ class MoralityCore:
 			region_servers = servers_by_region[server["region"]]
 			region_servers.append(Server(server["addr"], server["map"]))
 			servers_by_region[server["region"]] = region_servers
-
-		region_map_trackers = []
+		loop = asyncio.get_event_loop()
 		with Timer("Scans complete", suffix="\n"):
-			for region_id in servers_by_region:
-				server_list = servers_by_region[region_id]
-				popular_bot_maps = []
-				casual_total = 0
-				bot_total = 0
+			loop.run_until_complete(self.scan_servers(servers_by_region))
 
-				# Multithreading badassness. We can scan all the active TF2 dedicated servers in under 5 seconds.
-				executor = concurrent.futures.ThreadPoolExecutor(max_workers=self.workers)
-				future_objs = []
-				for sv in server_list:
-					future_obj = executor.submit(self.scanServer, sv.server_str, sv.map_name)
-					future_objs.append(future_obj)
-				for future_obj in concurrent.futures.as_completed(future_objs):
-					map_name, total_players, bot_count, server_str = future_obj.result()
-					# Cheap fix
-					if map_name is None:
-						continue
-					popular_bot_maps = self.updateMap(popular_bot_maps, map_name, bot_count, server_str)
-					casual_total += total_players
-					bot_total += bot_count
 
-				popular_bot_maps.sort(reverse=True)
-				scanner_debug(f"Sorted popular_bot_maps for region {region_id}: {popular_bot_maps}")
-				scanner_debug(f"Total players seen in region {region_id}: {casual_total}")
-				scanner_debug(f"Total bots seen in region {region_id}: {bot_total}")
-				tracker = {"region_id": region_id, "popular_bot_maps": popular_bot_maps, "casual_in_game": casual_total, "malicious_in_game": bot_total}
-				region_map_trackers.append(tracker)
-		return region_map_trackers
+	# Purpose: Scan TF2 gameservers to determine what maps malicious bots are currently on so that they can be targeted every time bots queue.
+	async def scan_servers(self, servers_by_region):
+		# Asynchronous badassness. We can scan all the active TF2 dedicated servers in under 5 seconds.
+		region_map_trackers = []
+		region_awaitables = []
+		for region_id in servers_by_region:
+			server_list = servers_by_region[region_id]
+			region_awaitables.append(self.scan_region(region_id, server_list))
+		for coroutine in asyncio.as_completed(region_awaitables):
+			tracker = await coroutine
+			region_map_trackers.append(tracker)
+		# Give new, completed data to the API by updating the class object-scoped variable
+		self.region_map_trackers = region_map_trackers
+
+
+	# Scans all the servers in a region asynchronously
+	async def scan_region(self, region_id, server_list):
+		popular_bot_maps = []
+		casual_total = 0
+		bot_total = 0
+		server_awaitables = []
+
+		for sv in server_list:
+			server_awaitables.append(self.scanServer(sv.server_str, sv.map_name))
+		for coroutine in asyncio.as_completed(server_awaitables):
+			map_name, total_players, bot_count, server_str = await coroutine
+			# Cheap fix
+			if map_name is None:
+				continue
+			popular_bot_maps = self.updateMap(popular_bot_maps, map_name, bot_count, server_str)
+			casual_total += total_players
+			bot_total += bot_count
+
+		popular_bot_maps.sort(reverse=True)
+		scanner_debug(f"Sorted popular_bot_maps for region {region_id}: {popular_bot_maps}")
+		scanner_debug(f"Total players seen in region {region_id}: {casual_total}")
+		scanner_debug(f"Total bots seen in region {region_id}: {bot_total}")
+		tracker = {"region_id": region_id, "popular_bot_maps": popular_bot_maps, "casual_in_game": casual_total, "malicious_in_game": bot_total}
+		return tracker
 
 
 	# GLaDOS scanning thread
 	def lucksman(self):
+		loop = asyncio.new_event_loop()
+		asyncio.set_event_loop(loop)
 		while True:
-			# Start a scan and give new, completed data to the API by updating the class object-scoped variable
-			self.region_map_trackers = self.scan_servers()
+			# Start a scan
+			self.start_scan()
 			# Save data every 5 minutes
 			if time.time() - self.last_save > 60 * 5:
 				self.save_data()
