@@ -14,6 +14,7 @@ import json
 import logging
 from logging.handlers import RotatingFileHandler
 from moralitycore import MoralityCore
+import re
 import socket
 import time
 
