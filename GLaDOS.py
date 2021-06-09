@@ -14,9 +14,11 @@ import json
 import logging
 from logging.handlers import RotatingFileHandler
 from moralitycore import MoralityCore
+import netaddr
 import re
 import socket
 import time
+from valve_whitelist import cidrs
 
 
 
@@ -146,15 +148,24 @@ def botnames():
 # Hathook users and bots can automatically accept/reject assigned matches depending on whether they have bots, before joining them
 # portalgun will convert the namestealers list into a format hathook can process safely
 # Namestealing bots will be marked as soon as users/bots join the match
-# TODO: Make sure the IP given is within Valve's server ranges
 # A timeout of 3 seconds would give more recent data upon multiple calls but 30 would ensure stability. Play it safe for now.
 @api.route("/check/<server>")
 @cache.cached(timeout=30)
 def user_checkServer(server):
+	if ":" not in server:
+		server = f"{server}:27015"
+	ip, port = server.split(":")
+	# Is this a Valve IP?
+	ip = netaddr.IPAddress(ip)
+	if not any(ip in cidr for cidr in cidrs):
+		return jsonify({"response": {"success": False, "message": "IP address does not appear to be a Valve IP"}})
+	# Is this a reasonable port?
+	if int(port) not in range(27015, 27270 + 1):
+		return jsonify({"response": {"success": False, "message": "Port not allowed"}})
 	try:
 		bot_count, namestealers = core.checkServer(server)
 	except socket.timeout:
-		return jsonify({"response": {"success": False}})
+		return jsonify({"response": {"success": False, "message": "Connection timed out"}})
 	return jsonify({"response": {"success": True, "server": server, "bot_count": bot_count, "namestealers": namestealers}})
 
 
