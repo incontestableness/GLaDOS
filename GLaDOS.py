@@ -401,8 +401,11 @@ class MoralityCore:
 		try:
 			response = session.get(f"https://api.steampowered.com/IGameServersService/GetServerList/v1/?key={api_key}&filter=appid\\440\\white\\1&limit=5000")
 			all_servers = response.json()["response"]["servers"]
-		except requests.exceptions.SSLError:
-			pass
+		except (requests.exceptions.SSLError, json.decoder.JSONDecodeError) as ex:
+			print(traceback.format_exc())
+			if type(ex) == json.decoder.JSONDecodeError:
+				print(f"Failed to decode response content:\n{response.content}")
+			time.sleep(1)
 		servers_by_region = {}
 		for region_id in range(0, 7 + 1):
 			servers_by_region[region_id] = []
