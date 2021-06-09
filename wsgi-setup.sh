@@ -12,13 +12,6 @@ read -p "Press enter when done..."; echo
 echo "Setting up static content..."
 sudo rmdir /var/www/html && sudo git clone https://github.com/incontestableness/milenko.ml /var/www/ && sudo chown -vR $USER /var/www/.git /var/www/html
 
-echo -e "\nSetting up crontab for potato.py..."
-if crontab -l 2>/dev/null | grep -q potato\.py; then
-       echo "Already setup."
-else
-       (crontab -l 2>/dev/null; echo "0 6 * * * cd ~/GLaDOS && ./potato.py --commit --push &>/dev/null") | crontab -
-fi
-
 echo -e "\nConfiguring apache2 logrotate to softly restart GLaDOS..."
 sudo cp -v logrotate.d/apache2 /etc/logrotate.d/apache2
 
