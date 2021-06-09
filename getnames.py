@@ -133,7 +133,7 @@ for e in evades_copy:
 			evades.remove(e)
 			if not args.quiet: print(f"Removed {e}")
 			continue
-		except:
+		except ValueError:
 			pass
 
 if args.evades:

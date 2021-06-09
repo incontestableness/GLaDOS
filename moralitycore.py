@@ -413,6 +413,7 @@ class MoralityCore:
 			# Save data every 5 minutes
 			if time.time() - self.last_save > 60 * 5:
 				self.save_data()
+				self.last_save = time.time()
 			if self.halt:
 				self.halted = True
 				break
