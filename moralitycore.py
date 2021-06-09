@@ -75,6 +75,7 @@ class MoralityCore:
 			file = open(f"{vname}.pkl", "wb")
 			exec(f"pickle.dump(self.{vname}, file)")
 			file.close()
+			print(f"Successfully saved pickled data for self.{vname}")
 
 
 	def load_blacklists(self):
@@ -124,6 +125,7 @@ class MoralityCore:
 		file = open("name_blacklist.txt", "a")
 		file.write(f"{name}\n")
 		file.close()
+		print(f"Updated name_blacklist.txt...")
 		self.load_blacklists()
 
 
