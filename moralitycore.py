@@ -146,16 +146,19 @@ class MoralityCore:
 		# Now try matching
 		for name_pattern in self.patterns:
 			if name_pattern.fullmatch(stripped):
-				match_debug(f"Stripped name \"{stripped}\" matched pattern: {self.unevade(name_pattern.pattern)}")
-				# TODO: Create a rule for this variant of the name?
+				match_debug(f"This name ({self.unevade(name)}), when STRIPPED, matched pattern: {self.unevade(name_pattern.pattern)}")
+				# Add this variant to the stripped name
+				pn = self.bot_names.setdefault(stripped, PName(stripped))
+				pn.variants.add(name)
+				self.bot_names[stripped] = pn
 				return name_pattern
 		# We didn't match against existing patterns, even when the name is stripped
 		# If the name starts with (N), warn about it
 		if self.dupematch.match(name):
 			match_debug(f"Name \"{self.unevade(name)}\" matched dupe pattern! New bot name or evade char?")
 			return self.dupematch
-		# Check this name's times_seen
-		# If this is a highly recurrent name, blacklist it
+		# We didn't match any patterns for the name, but it's possible that it's been seen used with char injection before.
+		# Check this name's times_seen - if this is happening often enough, blacklist it
 		# blacklist_name() checks for a duplicate before adding which makes this thread-safe
 		pn = self.bot_names.get(name)
 		if pn is not None:
@@ -168,6 +171,7 @@ class MoralityCore:
 					name_debug(f"The aforementioned name will now be blacklisted.")
 					self.blacklist_name(name)
 					return None
+		# Check the stripped name's times seen
 		else:
 			stripped = self.strip_name(name)
 			if len(stripped) == 0 or stripped.replace(" ", "") == "":
@@ -176,7 +180,7 @@ class MoralityCore:
 			if pn is None:
 				return None
 			if pn.times_seen >= self.suspicious_times_seen:
-				name_debug(f"This name ({self.unevade(name)}), when STRIPPED,  matches a previously seen name ({self.unevade(pn.name)}). Times seen: {pn.times_seen}")
+				name_debug(f"This name ({self.unevade(name)}), when STRIPPED, matches a previously seen name ({self.unevade(pn.name)}). Times seen: {pn.times_seen}")
 				if pn.times_seen >= self.cheater_times_seen:
 					name_debug(f"The aforementioned name will now be blacklisted in stripped form.")
 					self.blacklist_name(stripped)
@@ -188,19 +192,13 @@ class MoralityCore:
 		return re.sub(self.dupematch, "", name)
 
 
-	# Helper function to update or create the PName for the given bot name and return an updated list
-	def updatePName(self, name):
-		# We can ignore this particular case of bot_names changing size and just not increment the name
-		try:
-			for i in self.bot_names.values():
-				if i.name == name:
-					i.increment()
-					return
-			# PName doesn't exist yet, create it and append to the list
-			pn = PName(name)
-			self.bot_names[name] = pn
-		except RuntimeError:
-			print(traceback.format_exc())
+	# Helper function to increment or create the PName for the given bot name
+	def incrementPName(self, name):
+		# https://groups.google.com/g/comp.lang.python/c/unFvJJB-iAM
+		# https://docs.python.org/3/library/stdtypes.html#dict.setdefault
+		pn = self.bot_names.setdefault(name, PName(name))
+		pn.increment()
+		self.bot_names[name] = pn
 
 
 	# Same concept here but with TFMaps
@@ -233,7 +231,7 @@ class MoralityCore:
 					# This can run multiple times, increasing map "score" by bot count, unless we break out of the loop.
 					# Currently we allow it to do so.
 					bot_count += 1
-					self.updatePName(self.undupe(p.name))
+					self.incrementPName(self.undupe(p.name))
 			bot_count += len(self.getNamestealers(players))
 			return map_name, total_players, bot_count, server_str
 		except socket.timeout:
@@ -294,35 +292,35 @@ class MoralityCore:
 					namestealers.add(m)
 					try:
 						to_check.remove(m)
-					except:
+					except ValueError:
 						pass
 				elif self.is_evaded(first_name) and not self.is_evaded(m):
 					namesteal_debug(f"{self.unevade(first_name)} stole {self.unevade(m)}'s name!")
 					namestealers.add(first_name)
 					try:
 						to_check.remove(first_name)
-					except:
+					except ValueError:
 						pass
 				elif (not self.is_evaded(first_name)) and (not self.is_evaded(m)):
 					print("WARNING: is_evaded() didn't catch the injected chars!")
 					print(f"First name: {self.unevade(first_name)}")
 					print(f"Second name: {self.unevade(m)}")
 					# Throw these in so getnames.py can deal with it
-					self.updatePName(self.undupe(first_name))
-					self.updatePName(self.undupe(m))
+					self.incrementPName(self.undupe(first_name))
+					self.incrementPName(self.undupe(m))
 				else:
 					inject_debug(f"{self.unevade(first_name)} and {self.unevade(m)} are char injecting")
 					namestealers.add(first_name)
 					namestealers.add(m)
-					self.updatePName(self.strip_name(first_name))
-					self.updatePName(self.strip_name(m))
+					self.incrementPName(self.strip_name(first_name))
+					self.incrementPName(self.strip_name(m))
 					try:
 						to_check.remove(first_name)
-					except:
+					except ValueError:
 						pass
 					try:
 						to_check.remove(m)
-					except:
+					except ValueError:
 						pass
 		if len(namestealers) > 0:
 			unevaded = []

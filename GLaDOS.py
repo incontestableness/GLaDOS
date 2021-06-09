@@ -230,12 +230,16 @@ def namerules():
 		rule = {"actions": {"transient_mark": ["cheater"]}}
 		json_quote_escaped = pn.name.replace("\"", "\\\"")
 		name_re_json_escaped = re.escape(pn.name).replace("\"", "\\\"")
+		patterns = [f"(\([1-9]\d?\))?{name_re_json_escaped}"]
+		for variant in pn.variants:
+			name_re_json_escaped = re.escape(variant).replace("\"", "\\\"")
+			patterns.append(f"(\([1-9]\d?\))?{name_re_json_escaped}")
 		rule["description"] = f"\"{json_quote_escaped}\" seen {pn.times_seen} times in 24h"
 		rule["triggers"] = {
 			"username_text_match": {
 				"case_sensitive": True,
 				"mode": "regex",
-				"patterns": [f"(\([1-9]\d?\))?{name_re_json_escaped}"]
+				"patterns": patterns
 			}
 		}
 		rules.append(rule)
@@ -243,12 +247,16 @@ def namerules():
 		rule = {"actions": {"transient_mark": ["suspicious"]}}
 		json_quote_escaped = pn.name.replace("\"", "\\\"")
 		name_re_json_escaped = re.escape(pn.name).replace("\"", "\\\"")
+		patterns = [f"(\([1-9]\d?\))?{name_re_json_escaped}"]
+		for variant in pn.variants:
+			name_re_json_escaped = re.escape(variant).replace("\"", "\\\"")
+			patterns.append(f"(\([1-9]\d?\))?{name_re_json_escaped}")
 		rule["description"] = f"\"{json_quote_escaped}\" seen {pn.times_seen} times in 24h"
 		rule["triggers"] = {
 			"username_text_match": {
 				"case_sensitive": True,
 				"mode": "regex",
-				"patterns": [f"(\([1-9]\d?\))?{name_re_json_escaped}"]
+				"patterns": patterns
 			}
 		}
 		rules.append(rule)

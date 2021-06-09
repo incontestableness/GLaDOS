@@ -23,9 +23,10 @@ class TFMap:
 class PName:
 	def __init__(self, name):
 		self.name = name
-		self.times_seen = 1
+		self.times_seen = 0
 		self.first_seen = time.time()
 		self.last_seen = self.first_seen
+		self.variants = set()
 
 	def __lt__(self, other):
 		return self.times_seen < other.times_seen
