@@ -24,6 +24,21 @@ session = requests.Session()
 session.headers.update({"user-agent": "GLaDOS.py/3.0 (https://github.com/incontestableness/GLaDOS)"})
 
 
+# Times code execution inside a with Timer() block
+class Timer:
+	def __init__(self, prefix, suffix="", precision=2):
+		self.prefix = prefix
+		self.suffix = suffix
+		self.precision = precision
+
+	def __enter__(self):
+		self.start = time.time()
+
+	def __exit__(self, type, value, traceback):
+		elapsed = round(time.time() - self.start, self.precision)
+		print(f"{self.prefix} (took {elapsed} secs)...{self.suffix}")
+
+
 # Handles active server scanning
 class MoralityCore:
 	def __init__(self, scan_timeout, workers, suspicious_times_seen, cheater_times_seen):
@@ -347,16 +362,17 @@ class MoralityCore:
 	# Purpose: Scan TF2 gameservers to determine what maps malicious bots are currently on so that they can be targeted every time bots queue.
 	def scan_servers(self):
 		all_servers = []
-		try:
-			response = session.get(f"https://api.steampowered.com/IGameServersService/GetServerList/v1/?key={api_key}&filter=appid\\440\\white\\1&limit=5000")
-			all_servers = response.json()["response"]["servers"]
-		except (requests.exceptions.ConnectionError, requests.exceptions.SSLError, json.decoder.JSONDecodeError) as ex:
-			print(traceback.format_exc())
-			if type(ex) == json.decoder.JSONDecodeError:
-				print(f"Failed to decode response content:\n{response.content}")
-			else:
-				print("Failed to contact the Steam API server.")
-			time.sleep(1)
+		with Timer("Fetched TF2 servers from Steam API"):
+			try:
+				response = session.get(f"https://api.steampowered.com/IGameServersService/GetServerList/v1/?key={api_key}&filter=appid\\440\\white\\1&limit=5000")
+				all_servers = response.json()["response"]["servers"]
+			except (requests.exceptions.ConnectionError, requests.exceptions.SSLError, json.decoder.JSONDecodeError) as ex:
+				print(traceback.format_exc())
+				if type(ex) == json.decoder.JSONDecodeError:
+					print(f"Failed to decode response content:\n{response.content}")
+				else:
+					print("Failed to contact the Steam API server.")
+				time.sleep(1)
 		servers_by_region = {}
 		for region_id in range(0, 7 + 1):
 			servers_by_region[region_id] = []
@@ -371,45 +387,42 @@ class MoralityCore:
 			servers_by_region[server["region"]] = region_servers
 
 		region_map_trackers = []
-		for region_id in servers_by_region:
-			server_list = servers_by_region[region_id]
-			popular_bot_maps = []
-			casual_total = 0
-			bot_total = 0
+		with Timer("Scans complete", suffix="\n"):
+			for region_id in servers_by_region:
+				server_list = servers_by_region[region_id]
+				popular_bot_maps = []
+				casual_total = 0
+				bot_total = 0
 
-			# Multithreading badassness. We can scan all the active TF2 dedicated servers in under 5 seconds.
-			executor = concurrent.futures.ThreadPoolExecutor(max_workers=self.workers)
-			future_objs = []
-			for sv in server_list:
-				future_obj = executor.submit(self.scanServer, sv.server_str, sv.map_name)
-				future_objs.append(future_obj)
-			for future_obj in concurrent.futures.as_completed(future_objs):
-				map_name, total_players, bot_count, server_str = future_obj.result()
-				# Cheap fix
-				if map_name is None:
-					continue
-				popular_bot_maps = self.updateMap(popular_bot_maps, map_name, bot_count, server_str)
-				casual_total += total_players
-				bot_total += bot_count
+				# Multithreading badassness. We can scan all the active TF2 dedicated servers in under 5 seconds.
+				executor = concurrent.futures.ThreadPoolExecutor(max_workers=self.workers)
+				future_objs = []
+				for sv in server_list:
+					future_obj = executor.submit(self.scanServer, sv.server_str, sv.map_name)
+					future_objs.append(future_obj)
+				for future_obj in concurrent.futures.as_completed(future_objs):
+					map_name, total_players, bot_count, server_str = future_obj.result()
+					# Cheap fix
+					if map_name is None:
+						continue
+					popular_bot_maps = self.updateMap(popular_bot_maps, map_name, bot_count, server_str)
+					casual_total += total_players
+					bot_total += bot_count
 
-			popular_bot_maps.sort(reverse=True)
-			scanner_debug(f"Sorted popular_bot_maps for region {region_id}: {popular_bot_maps}")
-			scanner_debug(f"Total players seen in region {region_id}: {casual_total}")
-			scanner_debug(f"Total bots seen in region {region_id}: {bot_total}")
-			tracker = {"region_id": region_id, "popular_bot_maps": popular_bot_maps, "casual_in_game": casual_total, "malicious_in_game": bot_total}
-			region_map_trackers.append(tracker)
+				popular_bot_maps.sort(reverse=True)
+				scanner_debug(f"Sorted popular_bot_maps for region {region_id}: {popular_bot_maps}")
+				scanner_debug(f"Total players seen in region {region_id}: {casual_total}")
+				scanner_debug(f"Total bots seen in region {region_id}: {bot_total}")
+				tracker = {"region_id": region_id, "popular_bot_maps": popular_bot_maps, "casual_in_game": casual_total, "malicious_in_game": bot_total}
+				region_map_trackers.append(tracker)
 		return region_map_trackers
 
 
 	# GLaDOS scanning thread
 	def lucksman(self):
 		while True:
-			# Start a scan
-			start = time.time()
-			# Give new, completed data to the API by updating the class object-scoped variable
+			# Start a scan and give new, completed data to the API by updating the class object-scoped variable
 			self.region_map_trackers = self.scan_servers()
-			elapsed = round(time.time() - start, 2)
-			print(f"Scans complete (took {elapsed} secs)...\n")
 			# Save data every 5 minutes
 			if time.time() - self.last_save > 60 * 5:
 				self.save_data()
