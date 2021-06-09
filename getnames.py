@@ -102,11 +102,11 @@ for e in evades_copy:
 	supplemental_punctuation = (u"\u2E00", u"\u2E7F")
 	hiragana = (u"\u3040", u"\u309F")
 	katakana = (u"\u30A0", u"\u30FF")
-	cjk_unified_ideographs = (u"\u4E00", u"\u9FFF")
+	#cjk_unified_ideographs = (u"\u4E00", u"\u9FFF")
 	hangul_syllables = (u"\uAC00", u"\uD7AF")
 	javanese = (u"\uA980", u"\uA9DF")
 	whitelist_1 = (u"\uFFFD", u"\uFFFD")
-	allowed = [latin_1_supplement, latin_extended_a, latin_extended_b, cryllic, arabic, tibetan, phonetic_extensions, latin_extended_additional, letterlike_symbols, miscellaneous_symbols, dingbats, supplemental_punctuation, hiragana, katakana, cjk_unified_ideographs, hangul_syllables, javanese, whitelist_1]
+	allowed = [latin_1_supplement, latin_extended_a, latin_extended_b, cryllic, arabic, tibetan, phonetic_extensions, latin_extended_additional, letterlike_symbols, miscellaneous_symbols, dingbats, supplemental_punctuation, hiragana, katakana, hangul_syllables, javanese, whitelist_1]
 	blacklist = ["\xb2"]
 	if args.check:
 		decoded = args.check.encode().decode("unicode-escape")

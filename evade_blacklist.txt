@@ -20,6 +20,8 @@
 \u202c
 \u202d
 \u30d5.*\u30b0
+\u6873
+\u7cfb
 \ueea9
 \x1b
 \xb2
