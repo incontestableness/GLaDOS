@@ -26,8 +26,8 @@ from valve_whitelist import cidrs
 parser = argparse.ArgumentParser()
 # You may wish to tune this based on your ping to the servers
 parser.add_argument("--scan-timeout", type=float, default=0.500)
-# How long it takes to complete a scan, in seconds. Affects times seen requirements.
-parser.add_argument("--scan-duration", type=float, default=3.0)
+# How frequently a scan runs, in seconds. Affects times seen requirements and delay between scans.
+parser.add_argument("--scan-frequency", type=float, default=5.0)
 args = parser.parse_args()
 
 
@@ -43,9 +43,9 @@ print = logger.info
 
 # Calculate appropriate times seen requirements based on scanning speed
 # Reasonably confident. For a false positive, a single user with a name starting with (N) would have to be in-game for the full course of an hour.
-suspicious_times_seen = int((60 * 60) / args.scan_duration)
+suspicious_times_seen = int((60 * 60) / args.scan_frequency)
 # Very high confidence. For a false positive, a single user with a name starting with (N) would have to be in-game for the full course of 3 hours.
-cheater_times_seen = int((60 * 60 * 3) / args.scan_duration)
+cheater_times_seen = int((60 * 60 * 3) / args.scan_frequency)
 print(f"Times seen requirements: {suspicious_times_seen} for suspicious, {cheater_times_seen} for cheater")
 
 
@@ -57,7 +57,7 @@ regions_data = json.loads(data)
 
 
 # Create a GLaDOS core
-core = MoralityCore(args.scan_timeout, suspicious_times_seen, cheater_times_seen)
+core = MoralityCore(args.scan_frequency, args.scan_timeout, suspicious_times_seen, cheater_times_seen)
 
 
 # Declare our Flask instance and define all the API routes

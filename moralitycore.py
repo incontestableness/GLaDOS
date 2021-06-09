@@ -42,8 +42,9 @@ class Timer:
 
 # Handles active server scanning
 class MoralityCore:
-	def __init__(self, scan_timeout, suspicious_times_seen, cheater_times_seen):
+	def __init__(self, scan_frequency, scan_timeout, suspicious_times_seen, cheater_times_seen):
 		# Init
+		self.scan_frequency = scan_frequency
 		self.scan_timeout = scan_timeout
 		self.suspicious_times_seen = suspicious_times_seen
 		self.cheater_times_seen = cheater_times_seen
@@ -389,7 +390,7 @@ class MoralityCore:
 			region_servers.append(Server(server["addr"], server["map"]))
 			servers_by_region[server["region"]] = region_servers
 		loop = asyncio.get_event_loop()
-		with Timer("Scans complete", suffix="\n"):
+		with Timer("Scans complete"):
 			loop.run_until_complete(self.scan_servers(servers_by_region))
 
 
@@ -440,6 +441,7 @@ class MoralityCore:
 		asyncio.set_event_loop(loop)
 		while True:
 			# Start a scan
+			start = time.time()
 			self.start_scan()
 			# Save data every 5 minutes
 			if time.time() - self.last_save > 60 * 5:
@@ -448,3 +450,9 @@ class MoralityCore:
 			if self.halt:
 				self.halted = True
 				break
+			# Stabilize the scanning frequency
+			delay = self.scan_frequency - (time.time() - start)
+			if delay > 0:
+				delay = round(delay, 2)
+				print(f"Sleeping for {delay}s...\n")
+				time.sleep(delay)
