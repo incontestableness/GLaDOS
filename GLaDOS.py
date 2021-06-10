@@ -116,11 +116,9 @@ def restart():
 @cache.cached(forced_update=whitelisted)
 def popmaps(desired_region):
 	targeted = []
-	for tracker in core.region_map_trackers:
-		if str(tracker["region_id"]) != desired_region:
-			continue
-		for i in tracker["popular_bot_maps"]:
-			targeted.append(i.name)
+	tracker = core.region_map_trackers[int(desired_region)]
+	for i in tracker["popular_bot_maps"]:
+		targeted.append(i.name)
 	return jsonify({"response": {"popular_bot_maps": targeted}})
 
 
@@ -189,8 +187,9 @@ def stats():
 	bot_total = 0
 	players_per_region = {}
 	bots_per_region = {}
-	for tracker in core.region_map_trackers:
-		region_simple_name = regions_data[f"Region ID {tracker['region_id']}"]["simple_name"]
+	for region_id in core.region_map_trackers:
+		tracker = core.region_map_trackers[region_id]
+		region_simple_name = regions_data[f"Region ID {region_id}"]["simple_name"]
 		casual_total += tracker["casual_in_game"]
 		bot_total += tracker["malicious_in_game"]
 		players_per_region[region_simple_name] = tracker["casual_in_game"]

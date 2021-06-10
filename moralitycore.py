@@ -397,16 +397,16 @@ class MoralityCore:
 	# Purpose: Scan TF2 gameservers to determine what maps malicious bots are currently on so that they can be targeted every time bots queue.
 	async def scan_servers(self, servers_by_region):
 		# Asynchronous badassness. We can scan all the active TF2 dedicated servers in under 5 seconds.
-		region_map_trackers = []
+		region_map_trackers = {}
 		region_awaitables = []
 		for region_id in servers_by_region:
 			server_list = servers_by_region[region_id]
 			region_awaitables.append(self.scan_region(region_id, server_list))
 		for coroutine in asyncio.as_completed(region_awaitables):
 			tracker = await coroutine
-			region_map_trackers.append(tracker)
+			region_map_trackers[tracker["region_id"]] = tracker
 		# Give new, completed data to the API by updating the class object-scoped variable
-		self.region_map_trackers = region_map_trackers
+		self.region_map_trackers = dict(sorted(region_map_trackers.items()))
 
 
 	# Scans all the servers in a region asynchronously
