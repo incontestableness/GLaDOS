@@ -370,10 +370,12 @@ class MoralityCore:
 			with Timer("Fetched TF2 servers from Steam API"):
 				response = session.get(f"https://api.steampowered.com/IGameServersService/GetServerList/v1/?key={api_key}&filter=appid\\440\\white\\1&limit=5000")
 				all_servers = response.json()["response"]["servers"]
-		except (requests.exceptions.ConnectionError, requests.exceptions.SSLError, json.decoder.JSONDecodeError) as ex:
+		except (requests.exceptions.ConnectionError, requests.exceptions.SSLError, KeyError, json.decoder.JSONDecodeError) as ex:
 			print(traceback.format_exc())
 			if type(ex) == json.decoder.JSONDecodeError:
 				print(f"Failed to decode response content:\n{response.content}")
+			elif type(ex) == KeyError:
+				print(f"The Steam API didn't return a proper response:\n{response.json()}")
 			else:
 				print("Failed to contact the Steam API server.")
 			time.sleep(1)
