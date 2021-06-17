@@ -226,15 +226,15 @@ def namerules():
 		"update_url": "https://milenko.ml/api/namerules"
 	}
 	rules = []
+	dup_prefix_regex = "(\\([1-9]\\d?\\))?"
 	for pn in bnames:
 		rule = {"actions": {"transient_mark": ["cheater"]}}
-		json_quote_escaped = pn.name.replace("\"", "\\\"")
-		name_re_json_escaped = re.escape(pn.name).replace("\"", "\\\"")
-		patterns = [f"(\([1-9]\d?\))?{name_re_json_escaped}"]
+		name_re_escaped = re.escape(pn.name).replace("\\ ", " ")
+		patterns = [f"{dup_prefix_regex}{name_re_escaped}"]
 		for variant in pn.variants:
-			name_re_json_escaped = re.escape(variant).replace("\"", "\\\"")
-			patterns.append(f"(\([1-9]\d?\))?{name_re_json_escaped}")
-		rule["description"] = f"\"{json_quote_escaped}\" seen {pn.times_seen} times in 24h"
+			name_re_escaped = re.escape(variant).replace("\\ ", " ")
+			patterns.append(f"{dup_prefix_regex}{name_re_escaped}")
+		rule["description"] = f"\"{pn.name}\" seen {pn.times_seen} times in 24h"
 		rule["triggers"] = {
 			"username_text_match": {
 				"case_sensitive": True,
@@ -245,13 +245,12 @@ def namerules():
 		rules.append(rule)
 	for pn in snames:
 		rule = {"actions": {"transient_mark": ["suspicious"]}}
-		json_quote_escaped = pn.name.replace("\"", "\\\"")
-		name_re_json_escaped = re.escape(pn.name).replace("\"", "\\\"")
-		patterns = [f"(\([1-9]\d?\))?{name_re_json_escaped}"]
+		name_re_escaped = re.escape(pn.name).replace("\\ ", " ")
+		patterns = [f"{dup_prefix_regex}{name_re_escaped}"]
 		for variant in pn.variants:
-			name_re_json_escaped = re.escape(variant).replace("\"", "\\\"")
-			patterns.append(f"(\([1-9]\d?\))?{name_re_json_escaped}")
-		rule["description"] = f"\"{json_quote_escaped}\" seen {pn.times_seen} times in 24h"
+			name_re_escaped = re.escape(variant).replace("\\ ", " ")
+			patterns.append(f"{dup_prefix_regex}{name_re_escaped}")
+		rule["description"] = f"\"{pn.name}\" seen {pn.times_seen} times in 24h"
 		rule["triggers"] = {
 			"username_text_match": {
 				"case_sensitive": True,

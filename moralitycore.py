@@ -106,13 +106,9 @@ class MoralityCore:
 				# Ignore empty lines
 				if pattern == "":
 					continue
-				# Trust me, this entire line is necessary
-				pattern = pattern.encode().decode("unicode-escape").encode("UTF-8").decode()
 				# Add the prefix
 				pattern = "^(\([1-9]\d?\))?" + pattern
-				# https://docs.python.org/3/library/re.html#re.ASCII
-				compiled = re.compile(pattern, flags=re.ASCII)
-				patterns.append(compiled)
+				patterns.append(re.compile(pattern))
 		self.patterns = patterns
 		print("Name pattern blacklist loaded!")
 		with open("evade_blacklist.txt", "r") as bl:
@@ -133,8 +129,7 @@ class MoralityCore:
 	# Formats the given name and adds it to names_blacklist.txt, then reloads patterns from the file
 	# This will persist changes in a human readable/writable format
 	def blacklist_name(self, name):
-		name = name.encode("unicode-escape").decode()
-		name = re.escape(name)
+		name = re.escape(name).replace("\\ ", " ").encode("unicode-escape").decode()
 		if name in self.name_blacklist:
 			print(f"Not adding duplicate name {name}!")
 			return
