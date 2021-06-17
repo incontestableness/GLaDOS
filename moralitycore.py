@@ -205,6 +205,9 @@ class MoralityCore:
 
 	# Helper function to increment or create the PName for the given bot name
 	def incrementPName(self, name):
+		# If this is a variant of an existing name, we want to increment the original name instead of potentially creating a duplicate
+		# strip_name() isn't reliable for names that are entirely non-ascii so we use the new removeEvades()
+		name = self.removeEvades(name)
 		# https://groups.google.com/g/comp.lang.python/c/unFvJJB-iAM
 		# https://docs.python.org/3/library/stdtypes.html#dict.setdefault
 		pn = self.bot_names.setdefault(name, PName(name))
@@ -259,6 +262,13 @@ class MoralityCore:
 	# Returns an ASCII-only string
 	def strip_name(self, name):
 		return "".join(filter(lambda x: x in self.allowed_chars, name))
+
+
+	# Returns the string with evading character sequences removed
+	def removeEvades(self, name):
+		for seq in self.evasion_sequences:
+			name = re.sub(seq, "", name)
+		return name
 
 
 	# Returns true if the name has evading character sequences in it
