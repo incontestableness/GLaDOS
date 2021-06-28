@@ -204,6 +204,12 @@ def stats():
 	})
 
 
+@api.route("/debug")
+def debug():
+	patterns = [pat.pattern for pat in core.patterns]
+	return jsonify({"response": {"debug_info": {"patterns": patterns}}})
+
+
 # "You picked the wrong house, fool!"
 # Automatic TF2BD rules list creation based on current common bot names
 @api.route("/namerules")
