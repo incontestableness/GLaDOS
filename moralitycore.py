@@ -99,8 +99,8 @@ class MoralityCore:
 			# Store this so blacklist_name() can check and prevent duplicates
 			self.name_blacklist = data.split("\n")[:-1]
 			for pattern in self.name_blacklist:
-				# Ignore empty lines
-				if pattern == "":
+				# Ignore empty lines and comments
+				if pattern == "" or pattern.startswith("#" * 32):
 					continue
 				# Add the prefix
 				pattern = "^(\([1-9]\d?\))?" + pattern
