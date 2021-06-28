@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from helpers import unevade
 import time
 
 
@@ -30,6 +31,9 @@ class PName:
 
 	def __lt__(self, other):
 		return self.times_seen < other.times_seen
+
+	def __repr__(self):
+		return f"{unevade(self.name)} seen {self.times_seen} times with {len(self.variants)} variants"
 
 	def increment(self):
 		now = time.time()

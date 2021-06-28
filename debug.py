@@ -22,11 +22,6 @@ def scanner_debug(what):
 		print(what)
 
 
-def server_debug(what):
-	if logging_enabled("server"):
-		print(what)
-
-
 def timeout_debug(what):
 	if logging_enabled("timeout"):
 		print(what)
@@ -37,8 +32,23 @@ def match_debug(what):
 		print(what)
 
 
-def name_debug(what):
-	if logging_enabled("name"):
+def stripmatch_debug(what):
+	if logging_enabled("stripmatch"):
+		print(what)
+
+
+def dupematch_debug(what):
+	if logging_enabled("dupematch"):
+		print(what)
+
+
+def recur_debug(what):
+	if logging_enabled("recur"):
+		print(what)
+
+
+def striprecur_debug(what):
+	if logging_enabled("striprecur"):
 		print(what)
 
 
@@ -49,4 +59,9 @@ def namesteal_debug(what):
 
 def inject_debug(what):
 	if logging_enabled("inject"):
+		print(what)
+
+
+def matchify_debug(what):
+	if logging_enabled("matchify"):
 		print(what)

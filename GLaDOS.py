@@ -10,6 +10,7 @@ if __name__ != "__main__":
 import argparse
 from flask import abort, Flask, jsonify, redirect, request
 from flask_caching import Cache
+from helpers import matchify
 import json
 import logging
 from logging.handlers import RotatingFileHandler
@@ -229,11 +230,9 @@ def namerules():
 	dup_prefix_regex = "(\\([1-9]\\d?\\))?"
 	for pn in bnames:
 		rule = {"actions": {"transient_mark": ["cheater"]}}
-		name_re_escaped = re.escape(pn.name).replace("\\ ", " ")
-		patterns = [f"{dup_prefix_regex}{name_re_escaped}"]
+		patterns = [f"{dup_prefix_regex}{matchify(pn.name)}"]
 		for variant in pn.variants:
-			name_re_escaped = re.escape(variant).replace("\\ ", " ")
-			patterns.append(f"{dup_prefix_regex}{name_re_escaped}")
+			patterns.append(f"{dup_prefix_regex}{matchify(variant)}")
 		rule["description"] = f"\"{pn.name}\" seen {pn.times_seen} times in 24h"
 		rule["triggers"] = {
 			"username_text_match": {
@@ -245,11 +244,9 @@ def namerules():
 		rules.append(rule)
 	for pn in snames:
 		rule = {"actions": {"transient_mark": ["suspicious"]}}
-		name_re_escaped = re.escape(pn.name).replace("\\ ", " ")
-		patterns = [f"{dup_prefix_regex}{name_re_escaped}"]
+		patterns = [f"{dup_prefix_regex}{matchify(pn.name)}"]
 		for variant in pn.variants:
-			name_re_escaped = re.escape(variant).replace("\\ ", " ")
-			patterns.append(f"{dup_prefix_regex}{name_re_escaped}")
+			patterns.append(f"{dup_prefix_regex}{matchify(variant)}")
 		rule["description"] = f"\"{pn.name}\" seen {pn.times_seen} times in 24h"
 		rule["triggers"] = {
 			"username_text_match": {
