@@ -1,29 +1,33 @@
-braaaap \d+
-CAN YOU QUACK
-\[VALVE\] ?N(i|\xe2\x85\x88|\u2148)?g?gerkiller
-OneTrick
-wallyLMAO223
-ELDER GOD WAMO
-OMEGATRONIC
-DoesHotter
-Waffen\-SS
-your medical license v2\u0e49?
-NOT A N O N'S GUNNER
+################################ Patterns in this file are used to identify in-game names that are worth spending CPU time tracking their usage.
+################################ These patterns are only used for marking players as suspicious/cheater while it is statistically likely that many bots are using the name simultaneously.
 
+################################ Common bots
+braaaap \d+
+\n*\[VALVE\] ?N([iI]|\xe2\x85\x88|\u2148)?g?gerkiller
+Waffen-SS
+CAN YOU QUACK
+OneTrick
+royalhack\.net B0T
+XARQ0N
+DoesHotter
+OMEGATRONIC
+
+################################ Miscellaneous links
 youtube\.com/d3fc0n6
 shoppy\.gg/@d3fc0n6
 (https\u200f?://)?(www\.)?meowhook\.club/?
-
 shoppy\.gg/@Spicy_engineer
 discord\.gg/(9Ukuw9V|jgrCTUpGTH)
 (https://)?youtu\.be/(RE60VAyH0Yk?|sw9Si9JRsFg?)
-vk\.com/thenosok
+
+################################ Who?
+wallyLMAO223
+ELDER GOD WAMO
+discord\.io/wallyLMAO
 dlive.tv/ghostpolitics
 twitter\.com/CapitalistGhos?t?
-discord\.io/wallyLMAO
-t\.me/cyrexlinu(z|x)
-bit\.ly/botpolice\u0e31?
 
+################################ Faceit
 ASSIT - NEW CASUAL MATCHMAKING
 ASSIT: ALL NEW MATCHMAKING
 NEW ASSIT TF2
@@ -32,35 +36,12 @@ NO CHEATERS - ASSIT
 JOIN ASSIT TF2 TODAY
 assit:ru-matrix\.org
 
-friend\ :>
-\[ACP\]\ Dashie
-AscendedSION
-\xe0\xb8\xb8
-Hay\ que\ mover\ el\ cacharro
-CRAZY\ FROG
-carbine
-Pan
+################################ Abused names
 [eE]ngineer\ [gG]aming
-INNER\ CIRCLE\ GAMING
-Friendly\ Medical\ Services\u0e31?
-a|A
-George\ de\ Lugano
-Verify\ me\ www\.botpolice\.?(c|e)?(f|u)?
-MLP_LOVER1337
-fella\ in\ france
-DR3AM
-someones\ antibot
-ZhainLIVE
-WingsOfGhostsSon
-Peppermint\ Swirl
-DadPilled
-Asriel
-Chicago\ Cowboy
-MAGA\ Brony
-Miss\ Maxine
-Hitch\ Trailblazer
-Skunkler
-The\ Swarm
-Lil_\u041f\u0420\u041e\u0421\u0422\u0410\u042f\ \u041f\u042b\u041b\u042c
-Plushie\ Bot
-kaleb
+
+################################ Fake anti-bots and related
+Verify me www\.botpolice\.?(c|e)?(f|u)?
+t\.me/cyrexlinu(z|x)
+bit\.ly/botpolice\u0e31?
+
+################################ Automatically blacklisted names. Read line two again.
