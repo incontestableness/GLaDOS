@@ -8,6 +8,7 @@ if __name__ != "__main__":
 
 
 import argparse
+from debug import lc
 from flask import abort, Flask, jsonify, redirect, request
 from flask_caching import Cache
 from helpers import matchify
@@ -86,11 +87,13 @@ def root():
 
 
 # We can load an updated regex name blacklist on demand without restarting
+# The same goes for logging settings
 # The requesting IP must be whitelisted in ip_whitelist.txt
 @api.route("/reload")
 def reload():
 	if not whitelisted():
 		abort(403)
+	lc.reload_settings()
 	core.load_blacklists()
 	return jsonify({"response": {"success": True}})
 

@@ -5,63 +5,69 @@ import logging
 
 
 
-config = configparser.ConfigParser()
-config.read("settings.ini")
-logging_settings = config["logging"]
+class LogController:
+	def __init__(self):
+		self.reload_settings()
 
+	def reload_settings(self):
+		config = configparser.ConfigParser()
+		config.read("settings.ini")
+		self.logging_settings = config["logging"]
+
+	def enabled(self, which):
+		return self.logging_settings.getboolean(which)
+
+
+lc = LogController()
 logger = logging.getLogger()
 print = logger.info
 
 
-def logging_enabled(which):
-	return logging_settings.getboolean(which)
-
-
 def scanner_debug(what):
-	if logging_enabled("scanner"):
+	if lc.enabled("scanner"):
 		print(what)
 
 
 def timeout_debug(what):
-	if logging_enabled("timeout"):
+	if lc.enabled("timeout"):
 		print(what)
 
 
 def match_debug(what):
-	if logging_enabled("match"):
+	if lc.enabled("match"):
 		print(what)
 
 
 def stripmatch_debug(what):
-	if logging_enabled("stripmatch"):
+	if lc.enabled("stripmatch"):
 		print(what)
 
 
 def dupematch_debug(what):
-	if logging_enabled("dupematch"):
+	if lc.enabled("dupematch"):
 		print(what)
 
 
 def recur_debug(what):
-	if logging_enabled("recur"):
+	if lc.enabled("recur"):
 		print(what)
 
 
 def striprecur_debug(what):
-	if logging_enabled("striprecur"):
+	if lc.enabled("striprecur"):
 		print(what)
 
 
 def namesteal_debug(what):
-	if logging_enabled("namesteal"):
+	if lc.enabled("namesteal"):
 		print(what)
 
 
 def inject_debug(what):
-	if logging_enabled("inject"):
+	if lc.enabled("inject"):
 		print(what)
 
 
 def matchify_debug(what):
-	if logging_enabled("matchify"):
+	if lc.enabled("matchify"):
 		print(what)
