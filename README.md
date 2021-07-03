@@ -5,12 +5,15 @@
 
 ## What is GLaDOS?
 
-GLaDOS is a centralized server for:
-* providing an API for aggregated player and bot statistics
-* controlling hathook anti-bot map queueing to more efficiently target malicious bots
+GLaDOS is an application for:
+* automatic, continuous scanning of Valve TF2 servers to detect malicious bots
+* providing an API for aggregated player/bot statistics and automatic [TF2BD](https://github.com/PazerOP/tf2_bot_detector) player/rules list generation
+* directing hathook anti-bot map queueing to more efficiently target malicious bots
 * receiving [hathook](https://github.com/incontestableness/hathook-public) bot events via [portalgun](https://github.com/incontestableness/portalgun)
 
 GLaDOS also enables users running [hathook](https://github.com/incontestableness/hathook-public) to automatically abandon matches with malicious bots in them without having to join the server first. Similarly, hathook bots also take advantage of this functionality to avoid joining matches that don't have malicious bots to kick.
+
+It is intended to be run on a centralized server as a WSGI application for optimal performance. GLaDOS is experimental software still in alpha.
 
 
 ## How do I use this?
