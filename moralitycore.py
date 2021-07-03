@@ -4,6 +4,7 @@ import asyncio
 import a2s
 import concurrent.futures
 from debug import *
+from GLaDOS import __version__
 from helpers import *
 import json
 from object_classes import TFMap, PName, Server
@@ -22,7 +23,7 @@ with open("api-key.txt") as file:
 	api_key = file.read().strip()
 
 session = requests.Session()
-session.headers.update({"user-agent": "GLaDOS.py/3.0 (https://github.com/incontestableness/GLaDOS)"})
+session.headers.update({"user-agent": f"GLaDOS.py/{__version__} (https://github.com/incontestableness/GLaDOS)"})
 
 
 # Times code execution inside a with Timer() block

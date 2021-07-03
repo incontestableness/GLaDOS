@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
+__version__ = "3.0.0"
+
 import os
 
 # For running as a WSGI application, as it should be in production
 if __name__ != "__main__":
 	os.chdir(os.path.expanduser("~/GLaDOS"))
-
 
 import argparse
 from debug import lc
@@ -210,7 +211,7 @@ def stats():
 @api.route("/debug")
 def debug():
 	patterns = [pat.pattern for pat in core.patterns]
-	return jsonify({"response": {"debug_info": {"patterns": patterns}}})
+	return jsonify({"response": {"debug_info": {"version": __version__, "patterns": patterns}}})
 
 
 # "You picked the wrong house, fool!"
