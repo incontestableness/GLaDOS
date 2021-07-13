@@ -17,6 +17,7 @@ sudo cp -v logrotate.d/apache2 /etc/logrotate.d/apache2
 
 echo -e "\nSetting up WSGI..."
 sudo cp -vr WSGI/* /etc/apache2/
+sudo a2enmod headers
 sudo a2ensite GLaDOS.conf
 sudo systemctl reload apache2
 
