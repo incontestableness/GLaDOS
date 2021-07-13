@@ -2,12 +2,6 @@
 
 __version__ = "3.1.0"
 
-import os
-
-# For running as a WSGI application, as it should be in production
-if __name__ != "__main__":
-	os.chdir(os.path.expanduser("~/GLaDOS"))
-
 import argparse
 from debug import lc
 from flask import abort, Flask, jsonify, redirect, request
@@ -18,11 +12,17 @@ import logging
 from logging.handlers import RotatingFileHandler
 from moralitycore import MoralityCore
 import netaddr
+import os
 import re
 import socket
 import time
 from valve_whitelist import cidrs
 
+
+
+# GLaDOS modules will not import correctly if you don't do this.
+if __name__ == "__main__":
+	raise RuntimeError("You need to run ./GLaDOS.wsgi for development.")
 
 
 # Configuration options
@@ -270,8 +270,3 @@ def namerules():
 	response = jsonify(data)
 	response.headers["Content-Disposition"] = "inline; filename=rules.GLaDOS.json"
 	return response
-
-
-# Run the GLaDOS API server in the main thread, if running directly for development/testing and not as a WSGI application
-if __name__ == "__main__":
-	api.run(port=8000)
