@@ -1,0 +1,157 @@
+{
+	"comment": "There's a good reason these tables are numbered honey, you just haven't thought of it yet",
+	"regions": {
+		"by_id": {
+			"0": {
+				"descriptor": "East Coast US",
+				"valve_name": "US - East"
+			},
+			"1": {
+				"descriptor": "West Coast US",
+				"valve_name": "US - West"
+			},
+			"2": {
+				"descriptor": "South America",
+				"valve_name": "South America"
+			},
+			"3": {
+				"descriptor": "Europe",
+				"valve_name": "Europe"
+			},
+			"4": {
+				"descriptor": "South Asia",
+				"valve_name": "Asia"
+			},
+			"5": {
+				"descriptor": "Australia",
+				"valve_name": "Australia"
+			},
+			"6": {
+				"descriptor": "Western Asia",
+				"valve_name": "Middle East"
+			},
+			"7": {
+				"descriptor": "South Africa",
+				"valve_name": "Africa"
+			}
+		}
+	},
+	"datacenters": {
+		"by_id": {
+			"iad2": {
+				"region_id": "0",
+				"location": "Virginia, United States"
+			},
+			"tuk2": {
+				"region_id": "1",
+				"location": "Washington, United States"
+			},
+			"lax2": {
+				"region_id": "1",
+				"location": "Los Angeles, California, United States"
+			},
+			"lim1": {
+				"region_id": "2",
+				"location": "Peru"
+			},
+			"gru1": {
+				"region_id": "2",
+				"location": "Brazil"
+			},
+			"scl1": {
+				"region_id": "2",
+				"location": "Chile"
+			},
+			"fra2": {
+				"region_id": "3",
+				"location": "Frankfurt, Germany"
+			},
+			"mad1": {
+				"region_id": "3",
+				"location": "Madrid, Spain"
+			},
+			"sto1": {
+				"region_id": "3",
+				"location": "Stockholm, Sweden"
+			},
+			"sto2": {
+				"region_id": "3",
+				"location": "Stockholm, Sweden"
+			},
+			"sto3": {
+				"region_id": "3",
+				"location": "Stockholm, Sweden"
+			},
+			"sto4": {
+				"region_id": "3",
+				"location": "Stockholm, Sweden"
+			},
+			"sto5": {
+				"region_id": "3",
+				"location": "Stockholm, Sweden"
+			},
+			"sto6": {
+				"region_id": "3",
+				"location": "Stockholm, Sweden"
+			},
+			"sto7": {
+				"region_id": "3",
+				"location": "Stockholm, Sweden"
+			},
+			"maa1": {
+				"region_id": "4",
+				"location": "Chennai, Tamil Nadu, India"
+			},
+			"bom1": {
+				"region_id": "4",
+				"location": "Mumbai, Maharashtra, India"
+			},
+			"sgp2": {
+				"region_id": "4",
+				"location": "Singapore"
+			},
+			"hkg1": {
+				"region_id": "4",
+				"location": "Hong Kong, China"
+			},
+			"tyo1": {
+				"region_id": "4",
+				"location": "Tokyo, Japan"
+			},
+			"tyo2": {
+				"region_id": "4",
+				"location": "Tokyo, Japan"
+			},
+			"syd1": {
+				"region_id": "5",
+				"location": "Sydney, New South Wales, Australia"
+			},
+			"syd2": {
+				"region_id": "5",
+				"location": "Sydney, New South Wales, Australia"
+			},
+			"dxb1": {
+				"region_id": "6",
+				"location": "Dubai, Emirate of Dubai, United Arab Emirates"
+			},
+			"jnb1": {
+				"region_id": "7",
+				"location": "Johannesburg, Gauteng, South Africa"
+			},
+			"jnb2": {
+				"region_id": "7",
+				"location": "Johannesburg, Gauteng, South Africa"
+			}
+		},
+		"by_region_id": {
+			"0": ["iad2"],
+			"1": ["tuk2", "lax2"],
+			"2": ["lim1", "gru1", "scl1"],
+			"3": ["fra2", "mad1", "sto1", "sto2", "sto3", "sto4", "sto5", "sto6", "sto7"],
+			"4": ["maa1", "bom1", "sgp2", "hkg1", "tyo1", "tyo2"],
+			"5": ["syd1", "syd2"],
+			"6": ["dxb1"],
+			"7": ["jnb1", "jnb2"]
+		}
+	}
+}
