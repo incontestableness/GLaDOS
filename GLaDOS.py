@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-__version__ = "3.1.0"
+__version__ = "3.2.0"
 
 import argparse
 from debug import lc
@@ -52,11 +52,9 @@ cheater_times_seen = int((60 * 60 * 3) / args.scan_frequency)
 print(f"Times seen requirements: {suspicious_times_seen} for suspicious, {cheater_times_seen} for cheater")
 
 
-# Read in regions.json for nicer stats output
-file = open("regions.json", "r")
-data = file.read()
-file.close()
-regions_data = json.loads(data)
+# Read in region/datacenter mappings
+with open("mappings.json") as f:
+	mappings = json.load(f)
 
 
 # Create a GLaDOS core
@@ -117,13 +115,19 @@ def restart():
 
 
 # Return a list of map names to target
-@api.route("/popmaps/<desired_region>")
+@api.route("/popmaps/<region_id>")
 @cache.cached(forced_update=whitelisted)
-def popmaps(desired_region):
+def popmaps(region_id):
 	targeted = []
-	tracker = core.region_map_trackers[int(desired_region)]
-	for i in tracker["popular_bot_maps"]:
-		targeted.append(i.name)
+	mapper = mappings["datacenters"]["by_region_id"]
+	for datacenter_id in mapper[region_id]:
+		try:
+			tracker = core.datacenter_map_trackers[datacenter_id]
+			for i in tracker["popular_bot_maps"]:
+				targeted.append(i.name)
+		# Datacenter hasn't been scanned
+		except KeyError:
+			pass
 	return jsonify({"response": {"popular_bot_maps": targeted}})
 
 
@@ -192,17 +196,25 @@ def stats():
 	bot_total = 0
 	players_per_region = {}
 	bots_per_region = {}
-	for region_id in core.region_map_trackers:
-		tracker = core.region_map_trackers[region_id]
-		region_simple_name = regions_data[f"Region ID {region_id}"]["simple_name"]
+	datacenter_mapper = mappings["datacenters"]["by_id"]
+	region_mapper = mappings["regions"]["by_id"]
+	for datacenter_id in core.datacenter_map_trackers:
+		tracker = core.datacenter_map_trackers[datacenter_id]
 		casual_total += tracker["casual_in_game"]
 		bot_total += tracker["malicious_in_game"]
-		players_per_region[region_simple_name] = tracker["casual_in_game"]
-		bots_per_region[region_simple_name] = tracker["malicious_in_game"]
+		region_descriptor = region_mapper[datacenter_mapper[datacenter_id]["region_id"]]["descriptor"]
+		# Initialize datacenters as necessary
+		if region_descriptor not in players_per_region:
+			players_per_region[region_descriptor] = 0
+		if region_descriptor not in bots_per_region:
+			bots_per_region[region_descriptor] = 0
+		# Accumulate stats
+		players_per_region[region_descriptor] += tracker["casual_in_game"]
+		bots_per_region[region_descriptor] += tracker["malicious_in_game"]
 	return jsonify({"response": {
 			"casual_in_game": {
 				"totals": {"all_players": casual_total, "malicious_bots": bot_total},
-				"per_region": {"all_players": players_per_region, "malicious_bots": bots_per_region}
+				"per_datacenter": {"all_players": players_per_region, "malicious_bots": bots_per_region}
 			}
 		}
 	})

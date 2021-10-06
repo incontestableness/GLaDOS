@@ -61,13 +61,13 @@ class MoralityCore:
 		self.bot_names = {}
 
 		# Cached API data
-		self.region_map_trackers = []
+		self.datacenter_map_trackers = []
 
 		# We need to load these the first time
 		self.load_blacklists()
 
 		# Load saved data where possible
-		for vname in ["bot_names", "region_map_trackers"]:
+		for vname in ["bot_names", "datacenter_map_trackers"]:
 			try:
 				file = open(f"{vname}.pkl", "rb")
 				exec(f"self.{vname} = pickle.load(file)")
@@ -84,7 +84,7 @@ class MoralityCore:
 
 
 	def save_data(self):
-		for vname in ["bot_names", "region_map_trackers"]:
+		for vname in ["bot_names", "datacenter_map_trackers"]:
 			file = open(f"{vname}.pkl", "wb")
 			exec(f"pickle.dump(self.{vname}, file)")
 			file.close()
@@ -379,40 +379,47 @@ class MoralityCore:
 			else:
 				print("Failed to contact the Steam API server.")
 			time.sleep(1)
-		servers_by_region = {}
-		for region_id in range(0, 7 + 1):
-			servers_by_region[region_id] = []
+		# Used to get the datacenter identifier from the name field
+		# Yes, we are going to rely on this hyphen
+		datacenter_regex = re.compile(r"(?<=-)[a-z0-9]+")
+		servers_by_datacenter = {}
 		for server in all_servers:
 			# Wrong lever!
-			if "mvm" in server["gametype"].split(","):
+			if server["map"].startswith("mvm_"):
 				continue
 			if server["players"] == 0:
 				continue
-			region_servers = servers_by_region[server["region"]]
-			region_servers.append(Server(server["addr"], server["map"]))
-			servers_by_region[server["region"]] = region_servers
+			# Get the datacenter identifier for this server
+			datacenter_id = datacenter_regex.findall(server["name"])[0]
+			# Initialize datacenters as necessary
+			if datacenter_id not in servers_by_datacenter:
+				servers_by_datacenter[datacenter_id] = []
+			# Update the list
+			datacenter_servers = servers_by_datacenter[datacenter_id]
+			datacenter_servers.append(Server(server["addr"], server["map"]))
+			servers_by_datacenter[datacenter_id] = datacenter_servers
 		loop = asyncio.get_event_loop()
 		with Timer("Scans complete"):
-			loop.run_until_complete(self.scan_servers(servers_by_region))
+			loop.run_until_complete(self.scan_servers(servers_by_datacenter))
 
 
 	# Purpose: Scan TF2 gameservers to determine what maps malicious bots are currently on so that they can be targeted every time bots queue.
-	async def scan_servers(self, servers_by_region):
+	async def scan_servers(self, servers_by_datacenter):
 		# Asynchronous badassness. We can scan all the active TF2 dedicated servers in under 5 seconds.
-		region_map_trackers = {}
-		region_awaitables = []
-		for region_id in servers_by_region:
-			server_list = servers_by_region[region_id]
-			region_awaitables.append(self.scan_region(region_id, server_list))
-		for coroutine in asyncio.as_completed(region_awaitables):
+		datacenter_map_trackers = {}
+		datacenter_awaitables = []
+		for datacenter_id in servers_by_datacenter:
+			server_list = servers_by_datacenter[datacenter_id]
+			datacenter_awaitables.append(self.scan_datacenter(datacenter_id, server_list))
+		for coroutine in asyncio.as_completed(datacenter_awaitables):
 			tracker = await coroutine
-			region_map_trackers[tracker["region_id"]] = tracker
+			datacenter_map_trackers[tracker["datacenter_id"]] = tracker
 		# Give new, completed data to the API by updating the class object-scoped variable
-		self.region_map_trackers = dict(sorted(region_map_trackers.items()))
+		self.datacenter_map_trackers = dict(sorted(datacenter_map_trackers.items()))
 
 
-	# Scans all the servers in a region asynchronously
-	async def scan_region(self, region_id, server_list):
+	# Scans all the servers in a datacenter asynchronously
+	async def scan_datacenter(self, datacenter_id, server_list):
 		popular_bot_maps = []
 		casual_total = 0
 		bot_total = 0
@@ -430,10 +437,10 @@ class MoralityCore:
 			bot_total += bot_count
 
 		popular_bot_maps.sort(reverse=True)
-		scanner_debug(f"Sorted popular_bot_maps for region {region_id}: {popular_bot_maps}")
-		scanner_debug(f"Total players seen in region {region_id}: {casual_total}")
-		scanner_debug(f"Total bots seen in region {region_id}: {bot_total}")
-		tracker = {"region_id": region_id, "popular_bot_maps": popular_bot_maps, "casual_in_game": casual_total, "malicious_in_game": bot_total}
+		scanner_debug(f"Sorted popular_bot_maps for datacenter {datacenter_id}: {popular_bot_maps}")
+		scanner_debug(f"Total players seen in datacenter {datacenter_id}: {casual_total}")
+		scanner_debug(f"Total bots seen in datacenter {datacenter_id}: {bot_total}")
+		tracker = {"datacenter_id": datacenter_id, "popular_bot_maps": popular_bot_maps, "casual_in_game": casual_total, "malicious_in_game": bot_total}
 		return tracker
 
 

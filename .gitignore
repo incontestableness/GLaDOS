@@ -1,6 +1,6 @@
 __pycache__
 api-key.txt
 bot_names.pkl
-region_map_trackers.pkl
+datacenter_map_trackers.pkl
 log.txt*
 settings.ini

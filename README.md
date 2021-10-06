@@ -32,8 +32,8 @@ Yes! You can access the API at https://milenko.ml/api/something where "/somethin
 All responses are returned in JSON format, unless an error is encountered. Most calls are cached for about 5 seconds.
 
 Here are the publicly available API calls:
-* [/popmaps/\<region_id>](https://milenko.ml/api/popmaps/0) - A list of the most popular maps for malicious bots. See [regions.json](https://github.com/incontestableness/GLaDOS/blob/master/regions.json) for available region IDs.
-* [/botnames](https://milenko.ml/api/botnames) - A list of **potential** bot names, based on multiple players using the same name. This endpoint provides every name that has been seen with an (N) prefix in the past 24 hours. Use the namerules endpoint if you want times_seen limits applied and dynamically created rules that cover variants of names.
+* [/popmaps/\<region_id>](https://milenko.ml/api/popmaps/0) - A list of the most popular maps for malicious bots in the provided region. See [mappings.json](https://github.com/incontestableness/GLaDOS/blob/master/mappings.json) for available region IDs.
+* [/botnames](https://milenko.ml/api/botnames) - A list of **potential** bot names, based on multiple players using the same name over time. This endpoint provides every name that has been seen with an (N) prefix in the past 24 hours. Use the namerules endpoint if you want times_seen limits applied and dynamically created rules that cover variants of names.
 * [/namerules](https://milenko.ml/api/namerules) - An automatically generated [TF2BD](https://github.com/PazerOP/tf2_bot_detector)-compatible rules list for current bot names based on scanning Valve's TF2 servers for patterns in names.
 * [/check/\<server_address>](https://milenko.ml/api/check/208.78.165.231:27015) - The number of bots on the server and a list of bot names that might not have been otherwise detected (namestealers and char-injected names).
 * [/stats](https://milenko.ml/api/stats) - Cumulative statistics.
