@@ -2,7 +2,7 @@
 ################################ These patterns are only used for marking players as suspicious/cheater while it is statistically likely that many bots are using the name simultaneously.
 
 ################################ Common bots
-braaaap \d+
+(spooky )?braaaap \d+
 \n*\[VALVE\] ?N([iI]|\xe2\x85\x88|\u2148)?g?gerkiller
 Waffen-SS
 CAN YOU QUACK
