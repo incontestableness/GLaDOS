@@ -203,7 +203,7 @@ def stats():
 		casual_total += tracker["casual_in_game"]
 		bot_total += tracker["malicious_in_game"]
 		region_descriptor = region_mapper[datacenter_mapper[datacenter_id]["region_id"]]["descriptor"]
-		# Initialize datacenters as necessary
+		# Initialize regions as necessary
 		if region_descriptor not in players_per_region:
 			players_per_region[region_descriptor] = 0
 		if region_descriptor not in bots_per_region:
@@ -214,7 +214,7 @@ def stats():
 	return jsonify({"response": {
 			"casual_in_game": {
 				"totals": {"all_players": casual_total, "malicious_bots": bot_total},
-				"per_datacenter": {"all_players": players_per_region, "malicious_bots": bots_per_region}
+				"per_region": {"all_players": players_per_region, "malicious_bots": bots_per_region}
 			}
 		}
 	})
