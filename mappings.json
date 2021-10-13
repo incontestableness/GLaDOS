@@ -40,107 +40,133 @@
 		"by_id": {
 			"iad2": {
 				"region_id": "0",
-				"location": "Virginia, United States"
+				"location": "Virginia, United States",
+				"short_location": "Virginia, US"
 			},
 			"tuk2": {
 				"region_id": "1",
-				"location": "Washington, United States"
+				"location": "Washington, United States",
+				"short_location": "Washington, US"
 			},
 			"lax2": {
 				"region_id": "1",
-				"location": "Los Angeles, California, United States"
+				"location": "Los Angeles, California, United States",
+				"short_location": "California, US"
 			},
 			"lim1": {
 				"region_id": "2",
-				"location": "Peru"
+				"location": "Peru",
+				"short_location": "Peru"
 			},
 			"gru1": {
 				"region_id": "2",
-				"location": "Brazil"
+				"location": "Brazil",
+				"short_location": "Brazil"
 			},
 			"scl1": {
 				"region_id": "2",
-				"location": "Chile"
+				"location": "Chile",
+				"short_location": "Chile"
 			},
 			"fra2": {
 				"region_id": "3",
-				"location": "Frankfurt, Germany"
+				"location": "Frankfurt, Germany",
+				"short_location": "Germany"
 			},
 			"mad1": {
 				"region_id": "3",
-				"location": "Madrid, Spain"
+				"location": "Madrid, Spain",
+				"short_location": "Spain"
 			},
 			"sto1": {
 				"region_id": "3",
-				"location": "Stockholm, Sweden"
+				"location": "Stockholm, Sweden",
+				"short_location": "Sweden"
 			},
 			"sto2": {
 				"region_id": "3",
-				"location": "Stockholm, Sweden"
+				"location": "Stockholm, Sweden",
+				"short_location": "Sweden"
 			},
 			"sto3": {
 				"region_id": "3",
-				"location": "Stockholm, Sweden"
+				"location": "Stockholm, Sweden",
+				"short_location": "Sweden"
 			},
 			"sto4": {
 				"region_id": "3",
-				"location": "Stockholm, Sweden"
+				"location": "Stockholm, Sweden",
+				"short_location": "Sweden"
 			},
 			"sto5": {
 				"region_id": "3",
-				"location": "Stockholm, Sweden"
+				"location": "Stockholm, Sweden",
+				"short_location": "Sweden"
 			},
 			"sto6": {
 				"region_id": "3",
-				"location": "Stockholm, Sweden"
+				"location": "Stockholm, Sweden",
+				"short_location": "Sweden"
 			},
 			"sto7": {
 				"region_id": "3",
-				"location": "Stockholm, Sweden"
+				"location": "Stockholm, Sweden",
+				"short_location": "Sweden"
 			},
 			"maa1": {
 				"region_id": "4",
-				"location": "Chennai, Tamil Nadu, India"
+				"location": "Chennai, Tamil Nadu, India",
+				"short_location": "India"
 			},
 			"bom1": {
 				"region_id": "4",
-				"location": "Mumbai, Maharashtra, India"
+				"location": "Mumbai, Maharashtra, India",
+				"short_location": "India"
 			},
 			"sgp2": {
 				"region_id": "4",
-				"location": "Singapore"
+				"location": "Singapore",
+				"short_location": "Singapore"
 			},
 			"hkg1": {
 				"region_id": "4",
-				"location": "Hong Kong, China"
+				"location": "Hong Kong, China",
+				"short_location": "China"
 			},
 			"tyo1": {
 				"region_id": "4",
-				"location": "Tokyo, Japan"
+				"location": "Tokyo, Japan",
+				"short_location": "Japan"
 			},
 			"tyo2": {
 				"region_id": "4",
-				"location": "Tokyo, Japan"
+				"location": "Tokyo, Japan",
+				"short_location": "Japan"
 			},
 			"syd1": {
 				"region_id": "5",
-				"location": "Sydney, New South Wales, Australia"
+				"location": "Sydney, New South Wales, Australia",
+				"short_location": "Australia"
 			},
 			"syd2": {
 				"region_id": "5",
-				"location": "Sydney, New South Wales, Australia"
+				"location": "Sydney, New South Wales, Australia",
+				"short_location": "Australia"
 			},
 			"dxb1": {
 				"region_id": "6",
-				"location": "Dubai, Emirate of Dubai, United Arab Emirates"
+				"location": "Dubai, Emirate of Dubai, United Arab Emirates",
+				"short_location": "United Arab Emirates"
 			},
 			"jnb1": {
 				"region_id": "7",
-				"location": "Johannesburg, Gauteng, South Africa"
+				"location": "Johannesburg, Gauteng, South Africa",
+				"short_location": "South Africa"
 			},
 			"jnb2": {
 				"region_id": "7",
-				"location": "Johannesburg, Gauteng, South Africa"
+				"location": "Johannesburg, Gauteng, South Africa",
+				"short_location": "South Africa"
 			}
 		},
 		"by_region_id": {
