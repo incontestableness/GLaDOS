@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-__version__ = "3.2.0"
+__version__ = "3.2.1"
 
 import argparse
 from debug import lc
@@ -196,6 +196,8 @@ def stats():
 	bot_total = 0
 	players_per_region = {}
 	bots_per_region = {}
+	players_per_datacenter = {}
+	bots_per_datacenter = {}
 	datacenter_mapper = mappings["datacenters"]["by_id"]
 	region_mapper = mappings["regions"]["by_id"]
 	for datacenter_id in core.datacenter_map_trackers:
@@ -211,10 +213,14 @@ def stats():
 		# Accumulate stats
 		players_per_region[region_descriptor] += tracker["casual_in_game"]
 		bots_per_region[region_descriptor] += tracker["malicious_in_game"]
+		# Now do the basic datacenter one
+		players_per_datacenter[datacenter_id] = tracker["casual_in_game"]
+		bots_per_datacenter[datacenter_id] = tracker["malicious_in_game"]
 	return jsonify({"response": {
 			"casual_in_game": {
 				"totals": {"all_players": casual_total, "malicious_bots": bot_total},
-				"per_region": {"all_players": players_per_region, "malicious_bots": bots_per_region}
+				"per_region": {"all_players": players_per_region, "malicious_bots": bots_per_region},
+				"per_datacenter": {"all_players": players_per_datacenter, "malicious_bots": bots_per_datacenter}
 			}
 		}
 	})
