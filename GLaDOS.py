@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-__version__ = "3.2.1"
+__version__ = "3.2.2"
 
 import argparse
 from debug import lc
@@ -226,10 +226,17 @@ def stats():
 	})
 
 
+@api.route("/info")
+def info():
+	return jsonify({"response": {"info": {"api_version": __version__}}})
+
+
 @api.route("/debug")
 def debug():
+	if not whitelisted():
+		abort(403)
 	patterns = [pat.pattern for pat in core.patterns]
-	return jsonify({"response": {"debug_info": {"version": __version__, "patterns": patterns}}})
+	return jsonify({"response": {"debug": {"patterns": patterns}}})
 
 
 # "You picked the wrong house, fool!"
