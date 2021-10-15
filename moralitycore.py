@@ -3,6 +3,7 @@
 import asyncio
 import a2s
 import concurrent.futures
+import copy
 from debug import *
 from GLaDOS import __version__
 from helpers import *
@@ -24,6 +25,15 @@ with open("api-key.txt") as file:
 
 session = requests.Session()
 session.headers.update({"user-agent": f"GLaDOS.py/{__version__} (https://github.com/incontestableness/GLaDOS)"})
+
+
+# Load mappings so we can initialize the datacenter list
+with open("mappings.json") as f:
+	mappings = json.load(f)
+	# Save this to a template object so we don't have to process the json every time we scan
+	servers_by_datacenter_template = {}
+	for datacenter_id in mappings["datacenters"]["by_id"]:
+		servers_by_datacenter_template[datacenter_id] = []
 
 
 # Times code execution inside a with Timer() block
@@ -382,7 +392,7 @@ class MoralityCore:
 		# Used to get the datacenter identifier from the name field
 		# Yes, we are going to rely on this hyphen
 		datacenter_regex = re.compile(r"(?<=-)[a-z0-9]+")
-		servers_by_datacenter = {}
+		servers_by_datacenter = copy.deepcopy(servers_by_datacenter_template)
 		for server in all_servers:
 			# Wrong lever!
 			if server["map"].startswith("mvm_"):
@@ -391,9 +401,6 @@ class MoralityCore:
 				continue
 			# Get the datacenter identifier for this server
 			datacenter_id = datacenter_regex.findall(server["name"])[0]
-			# Initialize datacenters as necessary
-			if datacenter_id not in servers_by_datacenter:
-				servers_by_datacenter[datacenter_id] = []
 			# Update the list
 			datacenter_servers = servers_by_datacenter[datacenter_id]
 			datacenter_servers.append(Server(server["addr"], server["map"]))
