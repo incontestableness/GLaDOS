@@ -36,7 +36,7 @@ args = parser.parse_args()
 
 # Logging setup
 logging.basicConfig(
-        handlers = [RotatingFileHandler("log.txt", maxBytes=1024 * 1024 * 20, backupCount=2)],
+        handlers = [RotatingFileHandler("log.txt", maxBytes=1024 * 1024 * 20, backupCount=9, encoding="UTF-8")],
         level = logging.INFO,
         format = "[%(asctime)s] [%(funcName)s:%(lineno)d] %(message)s",
         datefmt = "%a %b %d @ %R:%S")

@@ -1,21 +1,21 @@
 /var/log/apache2/*.log {
-	daily
-	missingok
-	rotate 14
-	compress
-	delaycompress
-	notifempty
-	create 640 root adm
-	sharedscripts
-	postrotate
-                if invoke-rc.d apache2 status > /dev/null 2>&1; then \
-			wget --quiet --bind-address 127.0.0.1 -O /dev/null https://milenko.ml/api/restart >/dev/null; \
-			invoke-rc.d apache2 reload > /dev/null 2>&1; \
-                fi;
-	endscript
-	prerotate
-		if [ -d /etc/logrotate.d/httpd-prerotate ]; then \
-			run-parts /etc/logrotate.d/httpd-prerotate; \
-		fi; \
-	endscript
+    daily
+    missingok
+    rotate 14
+    compress
+    delaycompress
+    notifempty
+    create 640 root adm
+    sharedscripts
+    prerotate
+	if [ -d /etc/logrotate.d/httpd-prerotate ]; then
+	    run-parts /etc/logrotate.d/httpd-prerotate
+	fi
+    endscript
+    postrotate
+	if pgrep -f ^/usr/sbin/apache2 > /dev/null; then
+	    wget --quiet --bind-address 127.0.0.1 -O /dev/null https://milenko.ml/api/restart >/dev/null
+	    invoke-rc.d apache2 reload 2>&1 | logger -t apache2.logrotate
+	fi
+    endscript
 }

@@ -14,6 +14,9 @@ if __name__ != "__main__":
 	os.chdir(runtime)
 	# Python needs to know where to look for GLaDOS modules
 	sys.path.insert(0, runtime)
+	# and where to look for Python libraries installed via pip by the local user
+	site_packages = os.path.expanduser(f"~/.local/lib/python3.{sys.version_info.minor}/site-packages/")
+	sys.path.insert(0, site_packages)
 
 # Now we can load GLaDOS
 from GLaDOS import api as application
