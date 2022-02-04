@@ -400,7 +400,13 @@ class MoralityCore:
 			if server["players"] == 0:
 				continue
 			# Get the datacenter identifier for this server
-			datacenter_id = datacenter_regex.findall(server["name"])[0]
+			datacenter_id = None
+			try:
+				datacenter_id = datacenter_regex.findall(server["name"])[0]
+			except IndexError as ex:
+				print(traceback.format_exc())
+				print(f"Failed to extract datacenter ID from server object: {server}")
+				continue
 			# Update the list
 			datacenter_servers = servers_by_datacenter[datacenter_id]
 			datacenter_servers.append(Server(server["addr"], server["map"]))
