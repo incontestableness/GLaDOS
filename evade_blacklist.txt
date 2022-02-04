@@ -24,5 +24,6 @@
 \u6873
 \u7cfb
 \ueea9
+\ufffd
 \x1b
 \xb2
