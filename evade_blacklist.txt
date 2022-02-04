@@ -23,6 +23,7 @@
 \u30d5.*\u30b0
 \u6873
 \u7cfb
+\uacf0
 \ueea9
 \ufffd
 \x1b
