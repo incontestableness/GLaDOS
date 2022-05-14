@@ -3,6 +3,11 @@
 ![Who are you?](https://i.imgur.com/0gbb1AH.png)
 
 
+## Deprecation Notice
+
+GLaDOS has been deprecated as it is no longer possible to directly query Valve-hosted TF2 servers. If you are interested in the unpublished WIP multiprocessing code for some reason, or if you have other inquiries, email me at whyistherumg0ne@protonmail.com.
+
+
 ## What is GLaDOS?
 
 GLaDOS is an application for:
